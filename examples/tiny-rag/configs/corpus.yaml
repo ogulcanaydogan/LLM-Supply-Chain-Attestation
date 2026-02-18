@@ -1,0 +1,10 @@
+corpus_snapshot_id: kb-2026-02-17
+connector_configs:
+  - ../data/connector-local.yaml
+document_manifest: ../data/document-manifest.json
+chunking_config: ../data/chunking.yaml
+embedding_model: text-embedding-3-large
+embedding_input: ../data/embedding-input.jsonl
+index_builder_image_digest: sha256:builder-placeholder
+vector_index: ../data/vector-index.bin
+build_command: make index

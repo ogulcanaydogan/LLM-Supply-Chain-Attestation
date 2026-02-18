@@ -1,0 +1,2 @@
+Question: {{question}}
+Use citations from approved corpus only.

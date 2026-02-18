@@ -1,0 +1,11 @@
+route_config: ../route/route.yaml
+provider_set:
+  - provider: openai
+    model: gpt-4o-mini
+  - provider: openai
+    model: gpt-4.1-mini
+budget_policy: ../route/budget-policy.yaml
+fallback_graph: ../route/fallback-graph.yaml
+routing_strategy: latency_aware
+canary_config: ../route/canary.yaml
+simulation_result: ../route/simulation.json

@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "llmsa statement",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "statement_id",
+    "attestation_type",
+    "predicate_type",
+    "generated_at",
+    "generator",
+    "subject",
+    "predicate",
+    "privacy"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "statement_id": { "type": "string" },
+    "attestation_type": {
+      "type": "string",
+      "enum": [
+        "prompt_attestation",
+        "corpus_attestation",
+        "eval_attestation",
+        "route_attestation",
+        "slo_attestation"
+      ]
+    },
+    "predicate_type": { "type": "string", "format": "uri" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version", "git_sha"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" },
+        "git_sha": { "type": "string" }
+      }
+    },
+    "subject": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "uri", "digest", "size_bytes"],
+        "properties": {
+          "name": { "type": "string" },
+          "uri": { "type": "string" },
+          "digest": {
+            "type": "object",
+            "required": ["sha256"],
+            "properties": {
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          },
+          "size_bytes": { "type": "number" }
+        }
+      }
+    },
+    "materials": { "type": "array" },
+    "predicate": { "type": "object" },
+    "privacy": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["hash_only", "encrypted_payload", "plaintext_explicit"]
+        },
+        "encrypted_blob_digest": { "type": "string" },
+        "encryption_recipient_fingerprint": { "type": "string" }
+      }
+    },
+    "annotations": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

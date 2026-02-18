@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "eval_suite_id",
+    "testset_digest",
+    "scoring_config_digest",
+    "baseline_result_digest",
+    "candidate_result_digest",
+    "metrics",
+    "thresholds",
+    "regression_detected"
+  ],
+  "properties": {
+    "eval_suite_id": { "type": "string" },
+    "testset_digest": { "type": "string" },
+    "scoring_config_digest": { "type": "string" },
+    "baseline_result_digest": { "type": "string" },
+    "candidate_result_digest": { "type": "string" },
+    "metrics": { "type": "object", "additionalProperties": { "type": "number" } },
+    "thresholds": { "type": "object", "additionalProperties": { "type": "number" } },
+    "regression_detected": { "type": "boolean" },
+    "run_environment_digest": { "type": "string" }
+  }
+}

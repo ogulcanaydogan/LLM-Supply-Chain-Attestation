@@ -1,0 +1,51 @@
+version: 1
+oidc_issuer: https://token.actions.githubusercontent.com
+identity_regex: '^repo:.+:workflow:.+$'
+plaintext_allowlist: []
+gates:
+  - id: G001
+    trigger_paths:
+      - examples/tiny-rag/app/**
+      - prompts/**
+    required_attestations:
+      - prompt_attestation
+      - eval_attestation
+    message: "Prompt changed without passing eval attestation."
+  - id: G002
+    trigger_paths:
+      - examples/tiny-rag/data/**
+      - corpus/**
+    required_attestations:
+      - corpus_attestation
+      - eval_attestation
+    message: "Corpus changed without rebuild+eval attestations."
+  - id: G003
+    trigger_paths:
+      - examples/tiny-rag/route/**
+      - route/**
+    required_attestations:
+      - route_attestation
+      - slo_attestation
+    message: "Route changed without valid SLO attestation."
+  - id: G004
+    trigger_paths:
+      - examples/tiny-rag/eval/**
+      - eval/**
+    required_attestations:
+      - eval_attestation
+    message: "Eval config changed without signed eval attestation."
+  - id: G005
+    trigger_paths:
+      - release/**
+    required_attestations:
+      - prompt_attestation
+      - corpus_attestation
+      - eval_attestation
+      - route_attestation
+      - slo_attestation
+    message: "Release blocked: incomplete attestation set."
+  - id: G006
+    trigger_paths:
+      - "**"
+    required_attestations: []
+    message: "Sensitive payload exposure blocked by policy."

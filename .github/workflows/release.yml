@@ -1,0 +1,35 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          GOOS=linux GOARCH=amd64 go build -o dist/llmsa-linux-amd64 ./cmd/llmsa
+          GOOS=darwin GOARCH=arm64 go build -o dist/llmsa-darwin-arm64 ./cmd/llmsa
+          GOOS=windows GOARCH=amd64 go build -o dist/llmsa-windows-amd64.exe ./cmd/llmsa
+
+      - name: Generate SBOM placeholder
+        run: |
+          echo '{"sbom":"placeholder"}' > dist/sbom.json
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: llmsa-release
+          path: dist/*

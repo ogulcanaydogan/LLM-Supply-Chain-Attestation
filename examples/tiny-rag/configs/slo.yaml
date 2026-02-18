@@ -1,0 +1,10 @@
+slo_profile_id: prod-rag-api
+window_start: 2026-02-17T00:00:00Z
+window_end: 2026-02-17T23:59:59Z
+ttft_ms_p50: 750
+ttft_ms_p95: 1400
+tokens_per_sec_p50: 35
+cost_per_1k_tokens_cap_usd: 0.15
+error_rate_cap: 0.02
+error_budget_remaining: 0.81
+observability_query: ../slo/profile.json

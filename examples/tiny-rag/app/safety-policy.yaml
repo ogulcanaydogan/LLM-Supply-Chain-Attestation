@@ -1,0 +1,3 @@
+rules:
+  - id: no-pii-echo
+    action: redact

@@ -1,0 +1,12 @@
+eval_suite_id: rag-regression-core
+testset: ../eval/testset.json
+scoring_config: ../eval/scoring.yaml
+baseline_results: ../eval/baseline-results.json
+candidate_results: ../eval/candidate-results.json
+run_environment: ../eval/run-env.json
+metrics:
+  faithfulness: 0.92
+  relevance: 0.90
+thresholds:
+  faithfulness_min: 0.90
+  relevance_min: 0.88

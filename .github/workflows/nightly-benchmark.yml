@@ -1,0 +1,29 @@
+name: nightly-benchmark
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Run benchmark
+        run: ./scripts/benchmark.sh
+
+      - name: Run tamper tests
+        run: ./scripts/tamper-tests.sh
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: llmsa-nightly
+          path: |
+            verify.json
+            examples/tiny-rag/out/*

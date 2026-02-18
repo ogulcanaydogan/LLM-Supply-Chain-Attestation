@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "route_config_digest",
+    "provider_set",
+    "budget_policy_digest",
+    "fallback_graph_digest",
+    "routing_strategy"
+  ],
+  "properties": {
+    "route_config_digest": { "type": "string" },
+    "provider_set": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["provider", "model"],
+        "properties": {
+          "provider": { "type": "string" },
+          "model": { "type": "string" }
+        }
+      }
+    },
+    "budget_policy_digest": { "type": "string" },
+    "fallback_graph_digest": { "type": "string" },
+    "routing_strategy": { "type": "string" },
+    "canary_config_digest": { "type": "string" },
+    "simulation_result_digest": { "type": "string" }
+  }
+}

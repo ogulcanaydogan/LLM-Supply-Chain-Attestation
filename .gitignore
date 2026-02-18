@@ -1,0 +1,7 @@
+.llmsa/
+*.out
+*.log
+coverage.txt
+.DS_Store
+verify.json
+verify.md

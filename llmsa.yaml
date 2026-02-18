@@ -1,0 +1,17 @@
+collectors:
+  prompt_attestation: examples/tiny-rag/configs/prompt.yaml
+  corpus_attestation: examples/tiny-rag/configs/corpus.yaml
+  eval_attestation: examples/tiny-rag/configs/eval.yaml
+  route_attestation: examples/tiny-rag/configs/route.yaml
+  slo_attestation: examples/tiny-rag/configs/slo.yaml
+path_rules:
+  prompt_attestation:
+    - examples/tiny-rag/app/**
+  corpus_attestation:
+    - examples/tiny-rag/data/**
+  eval_attestation:
+    - examples/tiny-rag/eval/**
+  route_attestation:
+    - examples/tiny-rag/route/**
+  slo_attestation:
+    - examples/tiny-rag/slo/**

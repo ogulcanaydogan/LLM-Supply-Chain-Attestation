@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "prompt_bundle_digest",
+    "system_prompt_digest",
+    "template_digests",
+    "tool_schema_digests",
+    "safety_policy_digest"
+  ],
+  "properties": {
+    "prompt_bundle_digest": { "type": "string" },
+    "system_prompt_digest": { "type": "string" },
+    "template_digests": { "type": "array", "items": { "type": "string" } },
+    "tool_schema_digests": { "type": "array", "items": { "type": "string" } },
+    "safety_policy_digest": { "type": "string" },
+    "prompt_render_config_digest": { "type": "string" },
+    "prompt_test_suite_digest": { "type": "string" },
+    "sensitivity_labels": { "type": "array", "items": { "type": "string" } }
+  }
+}

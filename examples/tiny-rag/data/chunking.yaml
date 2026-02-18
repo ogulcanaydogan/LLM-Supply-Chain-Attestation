@@ -1,0 +1,3 @@
+strategy: fixed
+size: 512
+overlap: 64

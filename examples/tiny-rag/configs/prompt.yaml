@@ -1,0 +1,8 @@
+system_prompt: ../app/system_prompt.txt
+templates_dir: ../app/templates
+tool_schemas_dir: ../app/tools
+safety_policy: ../app/safety-policy.yaml
+render_config: ../app/render-config.yaml
+test_suite: ../app/prompt-tests.json
+sensitivity_labels:
+  - pii_possible

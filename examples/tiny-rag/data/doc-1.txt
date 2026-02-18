@@ -1,0 +1,1 @@
+YaPAY supports local-first attestation for LLM pipelines.
