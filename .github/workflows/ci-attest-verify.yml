@@ -8,6 +8,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  packages: write
 
 jobs:
   attestation-gate:
@@ -48,6 +49,50 @@ jobs:
             go run ./cmd/llmsa sign --in "$s" --provider sigstore --out .llmsa/attestations
           done
 
+      - name: Login to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish bundles to OCI
+        if: github.event_name == 'push'
+        run: |
+          REPO_LOWER="$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')"
+          : > oci-refs.txt
+          n=0
+          for b in .llmsa/attestations/*.bundle.json; do
+            n=$((n+1))
+            ref="ghcr.io/${REPO_LOWER}/attestations:${GITHUB_SHA}-b${n}"
+            go run ./cmd/llmsa publish --in "$b" --oci "$ref"
+            echo "$ref" >> oci-refs.txt
+          done
+
+      - name: Verify from OCI
+        if: github.event_name == 'push'
+        run: |
+          OCI_REFS="$(paste -sd, oci-refs.txt)"
+          go run ./cmd/llmsa verify \
+            --source oci \
+            --attestations "$OCI_REFS" \
+            --policy policy/examples/mvp-gates.yaml \
+            --format json \
+            --out verify-oci.json
+
+      - name: Gate from OCI
+        if: github.event_name == 'push'
+        run: |
+          OCI_REFS="$(paste -sd, oci-refs.txt)"
+          REF=origin/main
+          git rev-parse --verify "$REF" >/dev/null 2>&1 || REF=HEAD~1
+          go run ./cmd/llmsa gate \
+            --source oci \
+            --policy policy/examples/mvp-gates.yaml \
+            --attestations "$OCI_REFS" \
+            --git-ref "$REF"
+
       - name: Verify
         run: |
           go run ./cmd/llmsa verify \
@@ -73,5 +118,7 @@ jobs:
           name: llmsa-verify-artifacts
           path: |
             .llmsa/attestations/*.bundle.json
+            oci-refs.txt
             verify.json
+            verify-oci.json
             verify.md

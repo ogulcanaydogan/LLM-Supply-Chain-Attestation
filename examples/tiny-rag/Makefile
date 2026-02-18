@@ -24,7 +24,7 @@ sign: bootstrap
 		if command -v cosign >/dev/null 2>&1; then \
 			go run ./cmd/llmsa sign --in "$$s" --provider sigstore --out .llmsa/attestations; \
 		else \
-			go run ./cmd/llmsa sign --in "$$s" --provider sigstore --key .llmsa/dev_ed25519.pem --oidc-issuer https://token.actions.githubusercontent.com --oidc-identity repo:local/dev:workflow:manual --out .llmsa/attestations; \
+			go run ./cmd/llmsa sign --in "$$s" --provider sigstore --key .llmsa/dev_ed25519.pem --oidc-issuer https://token.actions.githubusercontent.com --oidc-identity https://github.com/local/dev/.github/workflows/manual.yml@refs/heads/local --out .llmsa/attestations; \
 		fi; \
 	done
 

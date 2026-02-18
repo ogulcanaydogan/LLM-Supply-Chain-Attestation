@@ -483,7 +483,7 @@ path_rules:
 
 const defaultPolicyYAML = `version: 1
 oidc_issuer: https://token.actions.githubusercontent.com
-identity_regex: '^repo:.+:workflow:.+$'
+identity_regex: '^https://github\.com/.+/.+/.github/workflows/.+@refs/.+$'
 plaintext_allowlist: []
 gates:
   - id: G001

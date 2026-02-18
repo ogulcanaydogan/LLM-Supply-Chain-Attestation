@@ -92,15 +92,23 @@ func defaultOIDCClaims(issuer, identity string) (string, string) {
 		issuer = "https://token.actions.githubusercontent.com"
 	}
 	if identity == "" {
-		repo := os.Getenv("GITHUB_REPOSITORY")
-		wf := os.Getenv("GITHUB_WORKFLOW")
-		if repo == "" {
-			repo = "local/dev"
+		if wfRef := os.Getenv("GITHUB_WORKFLOW_REF"); wfRef != "" {
+			identity = "https://github.com/" + wfRef
+		} else {
+			repo := os.Getenv("GITHUB_REPOSITORY")
+			wf := os.Getenv("GITHUB_WORKFLOW")
+			ref := os.Getenv("GITHUB_REF")
+			if repo == "" {
+				repo = "local/dev"
+			}
+			if wf == "" {
+				wf = "manual.yml"
+			}
+			if ref == "" {
+				ref = "refs/heads/local"
+			}
+			identity = fmt.Sprintf("https://github.com/%s/.github/workflows/%s@%s", repo, wf, ref)
 		}
-		if wf == "" {
-			wf = "manual"
-		}
-		identity = fmt.Sprintf("repo:%s:workflow:%s", repo, wf)
 	}
 	return issuer, identity
 }
