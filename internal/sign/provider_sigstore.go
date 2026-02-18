@@ -70,10 +70,19 @@ func (s *SigstoreSigner) Sign(canonicalPayload []byte) (SignMaterial, error) {
 	if err != nil {
 		return SignMaterial{}, err
 	}
+	certText := strings.TrimSpace(string(certRaw))
+	if certText == "" {
+		return SignMaterial{}, fmt.Errorf("cosign produced empty certificate output")
+	}
 
-	pubPEM, certDigest, err := publicKeyFromCertificatePEM(string(certRaw))
-	if err != nil {
-		return SignMaterial{}, err
+	// Some cosign versions/issuers may emit certificate formats we cannot parse here.
+	// Keep certificate bytes for verification and derive keyid from raw certificate digest.
+	pubPEM := ""
+	certSum := sha256.Sum256([]byte(certText))
+	certDigest := hex.EncodeToString(certSum[:])
+	if parsedPub, parsedDigest, parseErr := publicKeyFromCertificatePEM(certText); parseErr == nil {
+		pubPEM = parsedPub
+		certDigest = parsedDigest
 	}
 
 	return SignMaterial{
@@ -81,7 +90,7 @@ func (s *SigstoreSigner) Sign(canonicalPayload []byte) (SignMaterial, error) {
 		SigB64:         strings.TrimSpace(string(sigRaw)),
 		Provider:       "sigstore",
 		PublicKeyPEM:   pubPEM,
-		CertificatePEM: string(certRaw),
+		CertificatePEM: certText,
 		OIDCIssuer:     issuer,
 		OIDCIdentity:   identity,
 	}, nil
