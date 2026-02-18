@@ -46,7 +46,7 @@
 3. Environment notes:
    - GitHub Actions + local benchmark harness outputs.
 4. Limitations:
-   - merged-status external validation is pending maintainer review on opened PRs.
+   - merged-status external validation is pending maintainer approval on three in-review PRs.
 
 ## Non-Claims Statement
 

@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Filled execution artifacts:
   - `docs/public-footprint/external-contribution-log.md` updated with live Sigstore and OPA PRs.
   - `docs/public-footprint/external-contribution-log.md` extended with OpenSSF Scorecard PR.
+  - upstream PR statuses advanced to `in-review` with DCO checks passing.
   - `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` published.
   - `docs/public-footprint/evidence-pack-2026-02-18.md` published with URL-linked evidence and metrics.
   - `docs/public-footprint/third-party-mention-draft-2026-02.md` added as publish-ready external write-up.

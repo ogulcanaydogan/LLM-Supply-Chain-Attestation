@@ -37,3 +37,6 @@ Then copy metrics from the latest output into this table.
 - Workflow run (public artifact): https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22157220499
 - CI pass rate source window: 17/19 successful runs (`89.47%`).
 - External write-up URL: https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
+- Upstream PR review stage:
+  - `in-review`: 3
+  - `merged`: 0
