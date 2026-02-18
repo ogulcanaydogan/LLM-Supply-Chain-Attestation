@@ -3,6 +3,9 @@ name: release-verify
 on:
   release:
     types: [published]
+  workflow_run:
+    workflows: ["release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       tag:
@@ -15,13 +18,24 @@ permissions:
 
 jobs:
   verify-release-assets:
+    if: |
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       - name: Resolve tag
         id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             tag="${{ inputs.tag }}"
+          elif [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            tag="${{ github.event.workflow_run.head_branch }}"
+            if [[ -z "${tag}" ]]; then
+              tag="$(gh api "/repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+                --jq '.[] | select(.target_commitish == "${{ github.event.workflow_run.head_sha }}") | .tag_name' | head -n1)"
+            fi
           else
             tag="${{ github.event.release.tag_name }}"
           fi
