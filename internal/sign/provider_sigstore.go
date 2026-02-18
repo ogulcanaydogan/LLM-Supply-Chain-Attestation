@@ -70,30 +70,7 @@ func (s *SigstoreSigner) Sign(canonicalPayload []byte) (SignMaterial, error) {
 	if err != nil {
 		return SignMaterial{}, err
 	}
-	certText := strings.TrimSpace(string(certRaw))
-	if certText == "" {
-		return SignMaterial{}, fmt.Errorf("cosign produced empty certificate output")
-	}
-
-	// Some cosign versions/issuers may emit certificate formats we cannot parse here.
-	// Keep certificate bytes for verification and derive keyid from raw certificate digest.
-	pubPEM := ""
-	certSum := sha256.Sum256([]byte(certText))
-	certDigest := hex.EncodeToString(certSum[:])
-	if parsedPub, parsedDigest, parseErr := publicKeyFromCertificatePEM(certText); parseErr == nil {
-		pubPEM = parsedPub
-		certDigest = parsedDigest
-	}
-
-	return SignMaterial{
-		KeyID:          "sigstore-" + certDigest[:12],
-		SigB64:         strings.TrimSpace(string(sigRaw)),
-		Provider:       "sigstore",
-		PublicKeyPEM:   pubPEM,
-		CertificatePEM: certText,
-		OIDCIssuer:     issuer,
-		OIDCIdentity:   identity,
-	}, nil
+	return signMaterialFromCosignOutputs(strings.TrimSpace(string(sigRaw)), strings.TrimSpace(string(certRaw)), issuer, identity)
 }
 
 func defaultOIDCClaims(issuer, identity string) (string, string) {
@@ -138,4 +115,33 @@ func publicKeyFromCertificatePEM(certPEM string) (string, string, error) {
 	pubPEM := string(pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pkix}))
 	sum := sha256.Sum256(block.Bytes)
 	return pubPEM, hex.EncodeToString(sum[:]), nil
+}
+
+func signMaterialFromCosignOutputs(sigText string, certText string, issuer string, identity string) (SignMaterial, error) {
+	if sigText == "" {
+		return SignMaterial{}, fmt.Errorf("cosign produced empty signature output")
+	}
+	if certText == "" {
+		return SignMaterial{}, fmt.Errorf("cosign produced empty certificate output")
+	}
+
+	// Some cosign versions/issuers may emit certificate formats we cannot parse here.
+	// Keep certificate bytes for verification and derive keyid from raw certificate digest.
+	pubPEM := ""
+	certSum := sha256.Sum256([]byte(certText))
+	certDigest := hex.EncodeToString(certSum[:])
+	if parsedPub, parsedDigest, parseErr := publicKeyFromCertificatePEM(certText); parseErr == nil {
+		pubPEM = parsedPub
+		certDigest = parsedDigest
+	}
+
+	return SignMaterial{
+		KeyID:          "sigstore-" + certDigest[:12],
+		SigB64:         sigText,
+		Provider:       "sigstore",
+		PublicKeyPEM:   pubPEM,
+		CertificatePEM: certText,
+		OIDCIssuer:     issuer,
+		OIDCIdentity:   identity,
+	}, nil
 }
