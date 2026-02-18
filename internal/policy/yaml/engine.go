@@ -13,24 +13,25 @@ import (
 )
 
 type Policy struct {
-	Version            string   `yaml:"version"`
-	OIDCIssuer         string   `yaml:"oidc_issuer"`
-	IdentityRegex      string   `yaml:"identity_regex"`
-	PlaintextAllowlist []string `yaml:"plaintext_allowlist"`
-	Gates              []Gate   `yaml:"gates"`
+	Version            string   `yaml:"version" json:"version"`
+	OIDCIssuer         string   `yaml:"oidc_issuer" json:"oidc_issuer"`
+	IdentityRegex      string   `yaml:"identity_regex" json:"identity_regex"`
+	PlaintextAllowlist []string `yaml:"plaintext_allowlist" json:"plaintext_allowlist"`
+	Gates              []Gate   `yaml:"gates" json:"gates"`
 }
 
 type Gate struct {
-	ID                   string   `yaml:"id"`
-	TriggerPaths         []string `yaml:"trigger_paths"`
-	RequiredAttestations []string `yaml:"required_attestations"`
-	Message              string   `yaml:"message"`
+	ID                   string   `yaml:"id" json:"id"`
+	TriggerPaths         []string `yaml:"trigger_paths" json:"trigger_paths"`
+	RequiredAttestations []string `yaml:"required_attestations" json:"required_attestations"`
+	Message              string   `yaml:"message" json:"message"`
 }
 
 type StatementView struct {
-	AttestationType string
-	StatementID     string
-	PrivacyMode     string
+	AttestationType string   `json:"attestation_type"`
+	StatementID     string   `json:"statement_id"`
+	PrivacyMode     string   `json:"privacy_mode"`
+	DependsOn       []string `json:"depends_on"`
 }
 
 func LoadPolicy(path string) (Policy, error) {
@@ -99,7 +100,7 @@ func LoadStatements(source string) ([]StatementView, error) {
 	return out, nil
 }
 
-func changedFiles(gitRef string) ([]string, error) {
+func ChangedFiles(gitRef string) ([]string, error) {
 	if gitRef == "" {
 		gitRef = "HEAD~1"
 	}
@@ -124,10 +125,14 @@ func changedFiles(gitRef string) ([]string, error) {
 }
 
 func Evaluate(policy Policy, statements []StatementView, gitRef string) ([]string, error) {
-	changed, err := changedFiles(gitRef)
+	changed, err := ChangedFiles(gitRef)
 	if err != nil {
 		return nil, err
 	}
+	return EvaluateWithChanged(policy, statements, changed)
+}
+
+func EvaluateWithChanged(policy Policy, statements []StatementView, changed []string) ([]string, error) {
 	present := make(map[string]struct{})
 	allowPlain := make(map[string]struct{})
 	for _, id := range policy.PlaintextAllowlist {
@@ -187,15 +192,27 @@ func match(path, pattern string) bool {
 
 func extract(payload map[string]any) StatementView {
 	privacyMode := ""
+	dependsOn := []string{}
 	if p, ok := payload["privacy"].(map[string]any); ok {
 		if m, ok := p["mode"].(string); ok {
 			privacyMode = m
+		}
+	}
+	if a, ok := payload["annotations"].(map[string]any); ok {
+		if raw, ok := a["depends_on"].(string); ok {
+			for _, item := range strings.Split(raw, ",") {
+				item = strings.TrimSpace(item)
+				if item != "" {
+					dependsOn = append(dependsOn, item)
+				}
+			}
 		}
 	}
 	return StatementView{
 		AttestationType: asString(payload["attestation_type"]),
 		StatementID:     asString(payload["statement_id"]),
 		PrivacyMode:     privacyMode,
+		DependsOn:       dependsOn,
 	}
 }
 

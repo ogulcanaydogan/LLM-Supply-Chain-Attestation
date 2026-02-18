@@ -88,5 +88,7 @@ func CollectEval(configPath string) (types.Statement, error) {
 		}
 		subjects = append(subjects, s)
 	}
-	return newStatement(types.AttestationEval, predicate, subjects, nil), nil
+	statement := newStatement(types.AttestationEval, predicate, subjects, nil)
+	setDependsOn(&statement, types.AttestationPrompt, types.AttestationCorpus)
+	return statement, nil
 }

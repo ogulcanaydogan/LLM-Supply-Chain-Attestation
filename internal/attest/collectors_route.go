@@ -76,5 +76,7 @@ func CollectRoute(configPath string) (types.Statement, error) {
 		}
 		subjects = append(subjects, s)
 	}
-	return newStatement(types.AttestationRoute, predicate, subjects, nil), nil
+	statement := newStatement(types.AttestationRoute, predicate, subjects, nil)
+	setDependsOn(&statement, types.AttestationEval)
+	return statement, nil
 }

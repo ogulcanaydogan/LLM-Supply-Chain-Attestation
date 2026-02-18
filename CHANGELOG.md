@@ -1,0 +1,57 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+### Added
+- Apache 2.0 LICENSE file.
+- Dockerfile with multi-stage distroless build.
+- GoReleaser configuration for multi-platform binary releases and container images.
+- Test coverage for `internal/policy/yaml`, `internal/report`, `internal/store`, and `pkg/types` packages.
+- Privacy-aware attestation modes: `hash_only`, `plaintext_explicit`, `encrypted_payload` (age X25519).
+- Rego (OPA) policy engine alongside existing YAML gate engine.
+- Provenance chain verification with dependency graph, temporal ordering, and reference validation.
+
+### Changed
+- Expanded README with comprehensive architecture documentation, threat model summary, and UK Global Talent-optimised project description.
+
+## [0.3.0] - 2025-06-15
+
+### Added
+- Release verification workflow with automated post-release attestation validation.
+- Signer regression tests for Sigstore certificate parse variability.
+- Auto-triggered release verification after successful release workflow.
+
+## [0.2.0] - 2025-06-01
+
+### Added
+- OCI registry publish and pull with digest-pinned references.
+- Sigstore keyless signing with OIDC identity binding (GitHub Actions).
+- OCI round-trip verification in CI pipeline.
+- Identity policy alignment for Sigstore provider metadata.
+- Hardened bundle naming conventions.
+
+### Fixed
+- Tolerate Sigstore certificate parse variability across provider versions.
+
+## [0.1.0] - 2025-05-15
+
+### Added
+- Initial MVP CLI: `init`, `attest create`, `sign`, `verify`, `gate`, `report`, `demo run`.
+- Five attestation types: prompt, corpus, eval, route, SLO.
+- DSSE bundle signing with Sigstore and PEM providers.
+- YAML policy gate engine with path-based triggers.
+- JSON Schema validation for all statement types.
+- Subject digest recomputation during verification.
+- Semantic exit codes: 0 (pass), 10 (missing), 11 (signature), 12 (tamper), 13 (policy), 14 (schema).
+- Determinism validation with `--determinism-check` flag.
+- Git-aware `--changed-only` attestation generation.
+- Markdown and JSON audit report generation.
+- `examples/tiny-rag/` end-to-end working demo.
+- 20-case tamper detection test suite (`scripts/tamper-tests.sh`).
+- Performance benchmark suite (`scripts/benchmark.sh`).
+- GitHub Actions CI workflow with full attestation pipeline.
+- Threat model, policy guide, quickstart, and benchmark methodology documentation.

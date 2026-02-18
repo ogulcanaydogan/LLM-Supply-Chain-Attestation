@@ -16,27 +16,32 @@ import (
 
 const bundleMediaType = types.MediaType("application/vnd.llmsa.bundle.v1+json")
 
-func PublishOCI(inPath string, ociRef string) error {
+func PublishOCI(inPath string, ociRef string) (string, error) {
 	raw, err := os.ReadFile(inPath)
 	if err != nil {
-		return fmt.Errorf("read bundle: %w", err)
+		return "", fmt.Errorf("read bundle: %w", err)
 	}
 	ref, err := name.ParseReference(ociRef, name.WithDefaultRegistry("ghcr.io"))
 	if err != nil {
-		return fmt.Errorf("parse oci ref: %w", err)
+		return "", fmt.Errorf("parse oci ref: %w", err)
 	}
 
 	layer := static.NewLayer(raw, bundleMediaType)
 	img, err := mutate.AppendLayers(empty.Image, layer)
 	if err != nil {
-		return fmt.Errorf("append layer: %w", err)
+		return "", fmt.Errorf("append layer: %w", err)
 	}
 	img = mutate.MediaType(img, types.OCIManifestSchema1)
 
 	if err := remote.Write(ref, img, remote.WithAuthFromKeychain(authn.DefaultKeychain)); err != nil {
-		return fmt.Errorf("push oci artifact: %w", err)
+		return "", fmt.Errorf("push oci artifact: %w", err)
 	}
-	return nil
+	desc, err := remote.Get(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+	if err != nil {
+		return "", fmt.Errorf("resolve pushed descriptor: %w", err)
+	}
+	pinned := fmt.Sprintf("%s@%s", ref.Context().Name(), desc.Descriptor.Digest.String())
+	return pinned, nil
 }
 
 func PullOCI(ociRef string, outPath string) error {

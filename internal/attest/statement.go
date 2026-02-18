@@ -37,6 +37,32 @@ func newStatement(attType string, predicate any, subjects []types.Subject, mater
 	}
 }
 
+func setDependsOn(statement *types.Statement, deps ...string) {
+	if statement == nil {
+		return
+	}
+	unique := make(map[string]struct{})
+	for _, dep := range deps {
+		dep = strings.TrimSpace(dep)
+		if dep == "" {
+			continue
+		}
+		unique[dep] = struct{}{}
+	}
+	if len(unique) == 0 {
+		return
+	}
+	items := make([]string, 0, len(unique))
+	for dep := range unique {
+		items = append(items, dep)
+	}
+	sort.Strings(items)
+	if statement.Annotations == nil {
+		statement.Annotations = map[string]string{}
+	}
+	statement.Annotations["depends_on"] = strings.Join(items, ",")
+}
+
 func readGitSHA() string {
 	if v := os.Getenv("GITHUB_SHA"); v != "" {
 		return v

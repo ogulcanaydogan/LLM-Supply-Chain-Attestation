@@ -31,6 +31,9 @@ func CreateByType(opts CreateOptions) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	if err := applyPrivacyConfig(&statement, opts.ConfigPath); err != nil {
+		return nil, err
+	}
 
 	if opts.DeterminismCheck > 1 {
 		first, _, err := hash.HashCanonicalJSON(statement)

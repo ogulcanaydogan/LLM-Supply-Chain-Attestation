@@ -35,10 +35,42 @@ func BuildMarkdown(r verify.Report) string {
 
 	if len(r.Statements) > 0 {
 		b.WriteString("\n## Statements\n\n")
-		b.WriteString("| Type | Statement ID | Privacy |\n")
-		b.WriteString("|---|---|---|\n")
+		b.WriteString("| Type | Statement ID | Privacy | Depends On |\n")
+		b.WriteString("|---|---|---|---|\n")
 		for _, s := range r.Statements {
-			b.WriteString(fmt.Sprintf("| %s | %s | %s |\n", s.AttestationType, s.StatementID, s.PrivacyMode))
+			deps := "-"
+			if len(s.DependsOn) > 0 {
+				deps = strings.Join(s.DependsOn, ", ")
+			}
+			b.WriteString(fmt.Sprintf("| %s | %s | %s | %s |\n", s.AttestationType, s.StatementID, s.PrivacyMode, deps))
+		}
+	}
+
+	b.WriteString("\n## Provenance Chain\n\n")
+	b.WriteString(fmt.Sprintf("- Valid: **%t**\n", r.Chain.Valid))
+	b.WriteString(fmt.Sprintf("- Nodes: `%d`\n", len(r.Chain.Nodes)))
+	b.WriteString(fmt.Sprintf("- Edges: `%d`\n", len(r.Chain.Edges)))
+
+	if len(r.Chain.Edges) > 0 {
+		b.WriteString("\n| From Statement | From Type | To Type | To Statement | Satisfied | Detail |\n")
+		b.WriteString("|---|---|---|---|---:|---|\n")
+		for _, e := range r.Chain.Edges {
+			toID := e.ToStatementID
+			if toID == "" {
+				toID = "-"
+			}
+			detail := e.Detail
+			if detail == "" {
+				detail = "ok"
+			}
+			b.WriteString(fmt.Sprintf("| %s | %s | %s | %s | %t | %s |\n", e.FromStatementID, e.FromType, e.ToType, toID, e.Satisfied, detail))
+		}
+	}
+
+	if len(r.Chain.Violations) > 0 {
+		b.WriteString("\n### Chain Violations\n\n")
+		for _, v := range r.Chain.Violations {
+			b.WriteString("- " + v + "\n")
 		}
 	}
 

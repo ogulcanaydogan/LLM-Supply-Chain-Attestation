@@ -54,7 +54,9 @@ func CollectSLO(configPath string) (types.Statement, error) {
 		if err != nil {
 			return types.Statement{}, err
 		}
-		subjects = append(subjects, s)
-	}
-	return newStatement(types.AttestationSLO, predicate, subjects, nil), nil
+			subjects = append(subjects, s)
+		}
+	statement := newStatement(types.AttestationSLO, predicate, subjects, nil)
+	setDependsOn(&statement, types.AttestationRoute)
+	return statement, nil
 }

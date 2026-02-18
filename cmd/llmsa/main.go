@@ -11,6 +11,7 @@ import (
 
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/attest"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/hash"
+	policyrego "github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/policy/rego"
 	policyyaml "github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/policy/yaml"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/report"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/sign"
@@ -40,6 +41,7 @@ func main() {
 }
 
 var ociPullFunc = store.PullOCI
+var ociPublishFunc = store.PublishOCI
 
 func newRootCommand() *cobra.Command {
 	root := &cobra.Command{
@@ -227,7 +229,12 @@ func newPublishCommand() *cobra.Command {
 			if inPath == "" || ociRef == "" {
 				return fmt.Errorf("--in and --oci are required")
 			}
-			return store.PublishOCI(inPath, ociRef)
+			pinned, err := ociPublishFunc(inPath, ociRef)
+			if err != nil {
+				return err
+			}
+			fmt.Println(pinned)
+			return nil
 		},
 	}
 	cmd.Flags().StringVar(&inPath, "in", "", "bundle path")
@@ -318,7 +325,7 @@ func newVerifyCommand() *cobra.Command {
 }
 
 func newGateCommand() *cobra.Command {
-	var policyPath, attestationsPath, gitRef, sourceType string
+	var policyPath, attestationsPath, gitRef, sourceType, engine, regoPolicyPath string
 	cmd := &cobra.Command{
 		Use:   "gate",
 		Short: "Run policy gates and return non-zero on violations",
@@ -358,9 +365,30 @@ func newGateCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			violations, err := policyyaml.Evaluate(policy, statements, gitRef)
-			if err != nil {
-				return err
+			violations := []string{}
+			switch engine {
+			case "yaml":
+				violations, err = policyyaml.Evaluate(policy, statements, gitRef)
+				if err != nil {
+					return err
+				}
+			case "rego":
+				changed, err := policyyaml.ChangedFiles(gitRef)
+				if err != nil {
+					return err
+				}
+				result, err := policyrego.Evaluate(regoPolicyPath, policyrego.BuildInput(policy, statements, changed))
+				if err != nil {
+					return err
+				}
+				if !result.Allow {
+					violations = append(violations, result.Violations...)
+					if len(violations) == 0 {
+						violations = append(violations, "rego policy denied request")
+					}
+				}
+			default:
+				return fmt.Errorf("unsupported policy engine %s", engine)
 			}
 			if len(violations) > 0 {
 				for _, v := range violations {
@@ -375,6 +403,8 @@ func newGateCommand() *cobra.Command {
 	cmd.Flags().StringVar(&policyPath, "policy", "", "policy YAML path")
 	cmd.Flags().StringVar(&attestationsPath, "attestations", ".llmsa/attestations", "attestation directory or file")
 	cmd.Flags().StringVar(&sourceType, "source", "local", "attestation source type (local|oci)")
+	cmd.Flags().StringVar(&engine, "engine", "yaml", "policy engine (yaml|rego)")
+	cmd.Flags().StringVar(&regoPolicyPath, "rego-policy", "policy/examples/rego-gates.rego", "rego policy path (used with --engine rego)")
 	cmd.Flags().StringVar(&gitRef, "git-ref", "HEAD~1", "git reference for changed-file triggers")
 	return cmd
 }

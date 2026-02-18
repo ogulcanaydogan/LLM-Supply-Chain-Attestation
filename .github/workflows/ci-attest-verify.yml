@@ -66,8 +66,8 @@ jobs:
           for b in .llmsa/attestations/*.bundle.json; do
             n=$((n+1))
             ref="ghcr.io/${REPO_LOWER}/attestations:${GITHUB_SHA}-b${n}"
-            go run ./cmd/llmsa publish --in "$b" --oci "$ref"
-            echo "$ref" >> oci-refs.txt
+            pinned="$(go run ./cmd/llmsa publish --in "$b" --oci "$ref" | tail -n1)"
+            echo "$pinned" >> oci-refs.txt
           done
 
       - name: Verify from OCI

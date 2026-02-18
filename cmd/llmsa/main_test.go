@@ -105,6 +105,52 @@ gates: []
 	}
 }
 
+func TestGateCommandWithRegoEngine(t *testing.T) {
+	tmp := t.TempDir()
+	bundlePath := writeSignedPromptBundle(t, tmp, "plaintext_explicit")
+	policyPath := filepath.Join(tmp, "policy.yaml")
+	if err := os.WriteFile(policyPath, []byte(`version: 1
+oidc_issuer: https://token.actions.githubusercontent.com
+identity_regex: '^https://github\.com/.+/.+/.github/workflows/.+@refs/.+$'
+plaintext_allowlist: []
+gates: []
+`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	regoPath := filepath.Join(repoRoot(t), "policy", "examples", "rego-gates.rego")
+
+	originalPull := ociPullFunc
+	t.Cleanup(func() { ociPullFunc = originalPull })
+	ociPullFunc = func(_ string, outPath string) error {
+		raw, err := os.ReadFile(bundlePath)
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(outPath, raw, 0o644)
+	}
+
+	cmd := newGateCommand()
+	cmd.SetArgs([]string{
+		"--engine", "rego",
+		"--rego-policy", regoPath,
+		"--source", "oci",
+		"--policy", policyPath,
+		"--attestations", "ghcr.io/example/repo/attestations:test",
+	})
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatalf("expected policy failure for plaintext exposure")
+	}
+
+	var ce cliError
+	if !errors.As(err, &ce) {
+		t.Fatalf("expected cliError, got %T: %v", err, err)
+	}
+	if ce.code != verify.ExitPolicyFail {
+		t.Fatalf("expected exit code %d, got %d", verify.ExitPolicyFail, ce.code)
+	}
+}
+
 func TestDefaultBundlePathContract(t *testing.T) {
 	statement := map[string]any{
 		"attestation_type": "prompt_attestation",
@@ -134,6 +180,41 @@ func TestDefaultBundlePathSanitizesGitSHA(t *testing.T) {
 	}
 	if !strings.HasPrefix(got, "attestation_prompt_attestation_refs_heads_main_sha_with_spaces_") {
 		t.Fatalf("unexpected sanitized prefix: %q", got)
+	}
+}
+
+func TestPublishCommandUsesOCIPublisher(t *testing.T) {
+	tmp := t.TempDir()
+	bundlePath := filepath.Join(tmp, "bundle.json")
+	if err := os.WriteFile(bundlePath, []byte(`{"envelope":{"payloadType":"application/json","payload":"e30=","signatures":[]},"metadata":{"bundle_version":"1","created_at":"2026-01-01T00:00:00Z","statement_hash":"abc"}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	original := ociPublishFunc
+	t.Cleanup(func() { ociPublishFunc = original })
+
+	called := false
+	ociPublishFunc = func(inPath string, ociRef string) (string, error) {
+		called = true
+		if inPath != bundlePath {
+			t.Fatalf("unexpected in path: %s", inPath)
+		}
+		if ociRef != "ghcr.io/acme/llmsa/attestations:test" {
+			t.Fatalf("unexpected ref: %s", ociRef)
+		}
+		return "ghcr.io/acme/llmsa/attestations@sha256:deadbeef", nil
+	}
+
+	cmd := newPublishCommand()
+	cmd.SetArgs([]string{
+		"--in", bundlePath,
+		"--oci", "ghcr.io/acme/llmsa/attestations:test",
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("publish command failed: %v", err)
+	}
+	if !called {
+		t.Fatalf("expected oci publisher to be called")
 	}
 }
 
