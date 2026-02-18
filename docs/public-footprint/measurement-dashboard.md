@@ -1,0 +1,32 @@
+# Measurement Dashboard (Day 0 -> Day 30)
+
+This dashboard tracks public-footprint metrics only.  
+Day-0 values are captured on **2026-02-18 UTC**.
+
+## Scoreboard
+
+| Metric | Day 0 | Day 30 Target | Current Delta |
+|---|---:|---:|---:|
+| Upstream PRs opened | 0 | >=2 | 0 |
+| Upstream PRs merged | 0 | >=1 | 0 |
+| Third-party mentions | 0 | >=1 | 0 |
+| Anonymous pilot case studies | 0 | >=1 | 0 |
+| GitHub stars | 0 | >=25 | 0 |
+| GitHub forks | 0 | >=5 | 0 |
+| GitHub watchers | 0 | >=5 | 0 |
+| Release downloads (cumulative) | 184 | >=400 | 0 |
+| CI pass rate (last 30 days) | 93.3% | >=95% | 0 |
+
+## Notes
+
+- Targets are directional and can be revised based on real conversion rates.
+- Upstream PR metrics count only PRs to repositories outside this project.
+- Mention metrics require linkable, third-party-hosted content.
+
+## Update Commands
+
+```bash
+./scripts/public-footprint-snapshot.sh
+```
+
+Then copy metrics from the latest output into this table.

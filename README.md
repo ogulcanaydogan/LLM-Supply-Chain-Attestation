@@ -1,6 +1,6 @@
 # LLM Supply-Chain Attestation (`llmsa`)
 
-**A cryptographic attestation framework that brings software supply-chain security to large language model lifecycles — the first open-source toolchain to provide tamper-evident provenance for LLM artifacts across the entire development-to-deployment pipeline.**
+**A cryptographic attestation framework that brings software supply-chain security to large language model lifecycles with typed LLM artifact provenance, policy enforcement, and deployment-time admission checks.**
 
 [![CI](https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/workflows/ci-attest-verify.yml/badge.svg)](https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/workflows/ci-attest-verify.yml)
 ![Go 1.25](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)
@@ -38,6 +38,15 @@ As LLM systems increasingly power safety-critical applications in healthcare, fi
 | **SLO** | Latency targets, cost budgets, accuracy thresholds, query profiles | Operational constraints were defined against the verified routing setup |
 
 Each attestation cryptographically binds file digests to metadata in a signed [DSSE (Dead Simple Signing Envelope)](https://github.com/secure-systems-lab/dsse), creating an unforgeable chain of evidence from development through deployment.
+
+## One-Message Positioning
+
+`llmsa` secures LLM delivery by combining four controls under one operational boundary:
+
+1. **LLM-specific taxonomy** for prompt/corpus/eval/route/SLO changes.
+2. **Provenance-chain verification** so downstream decisions are bound to upstream evidence.
+3. **Policy enforcement** in CI for deny-on-missing-or-invalid evidence.
+4. **Fail-closed admission enforcement** in Kubernetes for deployment-time verification.
 
 ## Key Technical Contributions
 
@@ -408,13 +417,15 @@ deploy/
 test/e2e/               End-to-end integration tests
 scripts/
 ├── benchmark.sh        Performance benchmarks with reproducibility metrics
-└── tamper-tests.sh     20-case security validation suite
+├── tamper-tests.sh     20-case security validation suite
+└── public-footprint-snapshot.sh  Public metrics snapshot for external evidence tracking
 docs/
 ├── quickstart.md       Step-by-step bootstrap guide
 ├── threat-model.md     Threat coverage and mitigation analysis
 ├── policy-guide.md     Gate model and privacy guard documentation
 ├── benchmark-methodology.md  Benchmark design and limitations
-└── k8s-admission.md    Kubernetes validating webhook deployment guide
+├── k8s-admission.md    Kubernetes validating webhook deployment guide
+└── public-footprint/   30-day external validation playbook and evidence templates
 ```
 
 ## Documentation
@@ -424,6 +435,20 @@ docs/
 - [Policy Guide](docs/policy-guide.md) — Gate configuration, privacy guards, and Rego integration.
 - [Benchmark Methodology](docs/benchmark-methodology.md) — Determinism, tamper detection, and performance benchmarks.
 - [Kubernetes Admission](docs/k8s-admission.md) — Validating webhook deployment, configuration, and troubleshooting.
+- [Public Footprint Playbook](docs/public-footprint/README.md) — 30-day external validation execution plan and evidence templates.
+- [Positioning Message](docs/public-footprint/positioning.md) — single technical narrative for external communication consistency.
+- [Evidence Baseline](docs/public-footprint/evidence-baseline.md) — Day-0 public signal inventory and gap analysis.
+- [Measurement Dashboard](docs/public-footprint/measurement-dashboard.md) — Day-0 to Day-30 metric tracker.
+- [Case Study Template](docs/public-footprint/case-study-template.md) — Anonymous pilot study template with reproducibility sections.
+- [Evidence Pack Template](docs/public-footprint/evidence-pack-template.md) — Copy-ready claim-to-URL evidence format.
+- [What We Do Not Claim](docs/public-footprint/what-we-do-not-claim.md) — explicit scope limits and non-claims.
+
+## What `llmsa` Does Not Claim
+
+- It does not prevent runtime prompt injection or jailbreak attacks by itself.
+- It does not guarantee model quality; it enforces traceable evidence and policy gates.
+- It does not replace security review, threat modeling, or compliance assessment.
+- It does not claim universal performance across all workloads and environments.
 
 ## Roadmap
 

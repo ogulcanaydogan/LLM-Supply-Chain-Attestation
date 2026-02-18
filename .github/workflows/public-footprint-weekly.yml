@@ -1,0 +1,30 @@
+name: public-footprint-weekly
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run public footprint snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x scripts/public-footprint-snapshot.sh
+          ./scripts/public-footprint-snapshot.sh "${GITHUB_REPOSITORY}"
+
+      - name: Upload snapshot artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-footprint-snapshot
+          path: .llmsa/public-footprint/**

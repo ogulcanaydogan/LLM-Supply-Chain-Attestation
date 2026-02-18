@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Public-footprint documentation pack under `docs/public-footprint/` covering evidence baseline, upstream contribution briefs, mention plan, anonymous case study template, non-claims, and evidence-pack template.
+- `scripts/public-footprint-snapshot.sh` for reproducible public-metrics snapshots (stars/forks/releases/CI pass rate/PR activity).
+- Weekly metrics artifact workflow `.github/workflows/public-footprint-weekly.yml`.
 - Kubernetes validating admission webhook (`internal/webhook/`) for deployment-time attestation enforcement.
 - `llmsa webhook serve` CLI command with TLS, fail-open, and policy configuration flags.
 - Kubernetes manifests (`deploy/webhook/`) and Helm chart (`deploy/helm/`) for webhook deployment.
@@ -21,6 +24,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Provenance chain verification with dependency graph, temporal ordering, and reference validation.
 
 ### Changed
+- `docs/benchmark-methodology.md` rewritten with governance-yield-vs-overhead framing, strict raw artifact contract, and publication rules.
+- `README.md` tightened with single-message positioning, explicit non-claims section, and public-footprint documentation links.
 - README overhaul with 6 Mermaid diagrams (architecture, provenance chain, verification pipeline, privacy modes, K8s admission flow, CI/CD pipeline).
 - Expanded CONTRIBUTING.md, SECURITY.md, and GOVERNANCE.md with comprehensive community documentation.
 - Expanded docs/k8s-admission.md from placeholder to full deployment guide.
