@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 - Public-footprint documentation pack under `docs/public-footprint/` covering evidence baseline, upstream contribution briefs, mention plan, anonymous case study template, non-claims, and evidence-pack template.
+- Filled execution artifacts:
+  - `docs/public-footprint/external-contribution-log.md` updated with live Sigstore and OPA PRs.
+  - `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` published.
+  - `docs/public-footprint/evidence-pack-2026-02-18.md` published with URL-linked evidence and metrics.
+  - `docs/public-footprint/third-party-mention-draft-2026-02.md` added as publish-ready external write-up.
 - `scripts/public-footprint-snapshot.sh` for reproducible public-metrics snapshots (stars/forks/releases/CI pass rate/PR activity).
 - Weekly metrics artifact workflow `.github/workflows/public-footprint-weekly.yml`.
 - Kubernetes validating admission webhook (`internal/webhook/`) for deployment-time attestation enforcement.

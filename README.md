@@ -440,7 +440,9 @@ docs/
 - [Evidence Baseline](docs/public-footprint/evidence-baseline.md) — Day-0 public signal inventory and gap analysis.
 - [Measurement Dashboard](docs/public-footprint/measurement-dashboard.md) — Day-0 to Day-30 metric tracker.
 - [Case Study Template](docs/public-footprint/case-study-template.md) — Anonymous pilot study template with reproducibility sections.
+- [Anonymous Pilot Case Study](docs/public-footprint/case-study-anonymous-pilot-2026-02.md) — first metrics-backed anonymized pilot write-up.
 - [Evidence Pack Template](docs/public-footprint/evidence-pack-template.md) — Copy-ready claim-to-URL evidence format.
+- [Evidence Pack (Filled)](docs/public-footprint/evidence-pack-2026-02-18.md) — live URL + metric snapshot package.
 - [What We Do Not Claim](docs/public-footprint/what-we-do-not-claim.md) — explicit scope limits and non-claims.
 
 ## What `llmsa` Does Not Claim

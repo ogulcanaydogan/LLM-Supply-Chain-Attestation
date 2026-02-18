@@ -32,6 +32,14 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
 3. Mention accurately reflects scope and limitations.
 4. Mention date is captured in evidence pack.
 
+## Current Status (2026-02-18)
+
+- Publish-ready article draft completed:
+  - `docs/public-footprint/third-party-mention-draft-2026-02.md`
+- Evidence pack prepared for post-publication URL insertion:
+  - `docs/public-footprint/evidence-pack-2026-02-18.md`
+- Pending final action: publish draft on an external channel and record the URL.
+
 ## Minimal Mention Outline
 
 1. Why generic supply-chain controls miss LLM-specific change risk.

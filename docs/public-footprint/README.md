@@ -23,8 +23,11 @@ The goal is to convert strong internal engineering quality into externally verif
 - `upstream-opa-brief.md`: one-page contribution proposal for OPA/Rego ecosystem.
 - `upstream-openssf-brief.md`: one-page contribution proposal for OpenSSF-aligned docs/checklists.
 - `third-party-mention-plan.md`: external write-up and community distribution plan.
+- `third-party-mention-draft-2026-02.md`: publish-ready technical write-up draft.
 - `case-study-template.md`: anonymous pilot case study template with reproducibility sections.
+- `case-study-anonymous-pilot-2026-02.md`: first anonymized pilot case study using benchmark and tamper artifacts.
 - `evidence-pack-template.md`: copy-ready evidence format for submission packets.
+- `evidence-pack-2026-02-18.md`: filled evidence pack with live URLs and metric snapshot.
 - `what-we-do-not-claim.md`: explicit non-claims and known limitations language.
 - `day0-metrics-2026-02-18.md`: initial baseline snapshot.
 - `external-contribution-log.md`: tracker for opened/merged external PRs.
