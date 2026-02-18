@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: llmsa-webhook
+  namespace: llmsa-system
+  labels:
+    app: llmsa-webhook
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: llmsa-webhook
+  template:
+    metadata:
+      labels:
+        app: llmsa-webhook
+    spec:
+      serviceAccountName: llmsa-webhook
+      containers:
+        - name: webhook
+          image: ghcr.io/ogulcanaydogan/llmsa:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - llmsa
+            - webhook
+            - serve
+            - --port=8443
+            - --tls-cert=/certs/tls.crt
+            - --tls-key=/certs/tls.key
+            - --registry-prefix=$(REGISTRY_PREFIX)
+            - --schema-dir=/schemas/v1
+          env:
+            - name: REGISTRY_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  name: llmsa-webhook-config
+                  key: registryPrefix
+                  optional: true
+          ports:
+            - containerPort: 8443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8443
+              scheme: HTTPS
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /certs
+              readOnly: true
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: llmsa-webhook-tls

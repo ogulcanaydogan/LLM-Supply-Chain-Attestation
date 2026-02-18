@@ -7,16 +7,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- Kubernetes validating admission webhook (`internal/webhook/`) for deployment-time attestation enforcement.
+- `llmsa webhook serve` CLI command with TLS, fail-open, and policy configuration flags.
+- Kubernetes manifests (`deploy/webhook/`) and Helm chart (`deploy/helm/`) for webhook deployment.
+- E2E integration test suite (`test/e2e/`) covering full pipeline, tamper detection, chain verification, and webhook admit/deny flows.
+- Test coverage for all collector types (corpus, eval, route, slo), hash, sign, and verify packages.
+- Test coverage for `internal/policy/yaml`, `internal/report`, `internal/store`, and `pkg/types` packages.
 - Apache 2.0 LICENSE file.
 - Dockerfile with multi-stage distroless build.
 - GoReleaser configuration for multi-platform binary releases and container images.
-- Test coverage for `internal/policy/yaml`, `internal/report`, `internal/store`, and `pkg/types` packages.
 - Privacy-aware attestation modes: `hash_only`, `plaintext_explicit`, `encrypted_payload` (age X25519).
 - Rego (OPA) policy engine alongside existing YAML gate engine.
 - Provenance chain verification with dependency graph, temporal ordering, and reference validation.
 
 ### Changed
-- Expanded README with comprehensive architecture documentation, threat model summary, and UK Global Talent-optimised project description.
+- README overhaul with 6 Mermaid diagrams (architecture, provenance chain, verification pipeline, privacy modes, K8s admission flow, CI/CD pipeline).
+- Expanded CONTRIBUTING.md, SECURITY.md, and GOVERNANCE.md with comprehensive community documentation.
+- Expanded docs/k8s-admission.md from placeholder to full deployment guide.
 
 ## [0.3.0] - 2025-06-15
 

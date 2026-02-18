@@ -31,6 +31,9 @@ jobs:
       - name: Test
         run: go test ./...
 
+      - name: E2E Tests
+        run: go test -tags=e2e -v -timeout 120s ./test/e2e/
+
       - name: Init
         run: go run ./cmd/llmsa init
 

@@ -6,6 +6,8 @@
 ![Go 1.25](https://img.shields.io/badge/Go-1.25-00ADD8?logo=go)
 ![Sigstore](https://img.shields.io/badge/Signing-Sigstore%20Keyless-blueviolet?logo=sigstore)
 ![OPA](https://img.shields.io/badge/Policy-Open%20Policy%20Agent-7D9AAA)
+![K8s Webhook](https://img.shields.io/badge/K8s-Admission%20Webhook-326CE5?logo=kubernetes)
+![Tamper Tests](https://img.shields.io/badge/Tamper%20Tests-20%20Cases-red)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 
 ---
@@ -47,10 +49,18 @@ Unlike generic artifact attestation tools, `llmsa` introduces a **domain-specifi
 
 `llmsa` enforces a **directed acyclic dependency graph** between attestation types, ensuring logical ordering and referential integrity:
 
-```
-prompt_attestation ──┐
-                     ├──→ eval_attestation ──→ route_attestation ──→ slo_attestation
-corpus_attestation ──┘
+```mermaid
+graph LR
+    PA["🔤 Prompt\nAttestation"] --> EA["📊 Eval\nAttestation"]
+    CA["📚 Corpus\nAttestation"] --> EA
+    EA --> RA["🔀 Route\nAttestation"]
+    RA --> SA["⚡ SLO\nAttestation"]
+
+    style PA fill:#4A90D9,color:#fff,stroke:#2E6BA6
+    style CA fill:#4A90D9,color:#fff,stroke:#2E6BA6
+    style EA fill:#7B68EE,color:#fff,stroke:#5A4FCF
+    style RA fill:#E8833A,color:#fff,stroke:#C06A2B
+    style SA fill:#50C878,color:#fff,stroke:#3BA55D
 ```
 
 The chain verifier validates:
@@ -64,6 +74,28 @@ This ensures that no attestation can exist in isolation — every claim about mo
 ### 3. Privacy-Preserving Attestation Modes
 
 LLM artifacts often contain sensitive intellectual property (proprietary prompts, confidential training data). `llmsa` provides three privacy modes:
+
+```mermaid
+flowchart TD
+    Start["Privacy Mode\nSelection"] --> Q1{"Contains\nSensitive IP?"}
+
+    Q1 -->|No| HO["hash_only\n(Default)"]
+    Q1 -->|Yes| Q2{"Content Recovery\nRequired?"}
+
+    Q2 -->|No| HO
+    Q2 -->|Yes| Q3{"Authorised\nRecipient?"}
+
+    Q3 -->|Yes| EP["encrypted_payload\n(Age X25519)"]
+    Q3 -->|No - Audit Only| PE["plaintext_explicit\n(Policy-Gated)"]
+
+    HO --> D1["SHA-256 digests only\nNo payload stored"]
+    EP --> D2["Encrypted blob\nDeterministic digest binding"]
+    PE --> D3["Full payload embedded\nBlocked unless allowlisted"]
+
+    style HO fill:#28A745,color:#fff
+    style EP fill:#FFC107,color:#000
+    style PE fill:#DC3545,color:#fff
+```
 
 | Mode | Behaviour | Use Case |
 |---|---|---|
@@ -99,31 +131,140 @@ Signed attestation bundles are published to any OCI-compliant container registry
 - Immutable references via `registry/repo@sha256:...` digest URIs.
 - Pull-based verification from any environment with registry access.
 
-### 7. Determinism Validation
+### 7. Kubernetes Admission Enforcement
+
+The `llmsa webhook serve` command runs a **validating admission webhook** that intercepts Pod, Deployment, ReplicaSet, StatefulSet, DaemonSet, and Job creation, pulling attestation bundles from OCI registries and running the full four-stage verification pipeline before allowing resources into the cluster.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant K8s as K8s API Server
+    participant WH as llmsa Webhook
+    participant OCI as OCI Registry
+    participant VE as Verify Engine
+
+    Dev->>K8s: kubectl apply -f deployment.yaml
+    K8s->>WH: AdmissionReview (Pod spec)
+    WH->>WH: Extract image refs
+    loop For each container image
+        WH->>OCI: Pull attestation bundle
+        OCI-->>WH: DSSE bundle
+        WH->>VE: verify.Run(bundle)
+        VE-->>WH: Report (pass/fail)
+    end
+    alt All images verified
+        WH-->>K8s: Allowed
+        K8s-->>Dev: Pod created
+    else Verification failed
+        WH-->>K8s: Denied (with reason)
+        K8s-->>Dev: Error: attestation verification failed
+    end
+```
+
+### 8. Determinism Validation
 
 The `--determinism-check N` flag runs attestation generation N times and validates that content hashes match (excluding runtime nonces like timestamps and UUIDs). This catches non-deterministic collectors before they produce unreproducible attestations.
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│                          CLI (cmd/llmsa)                            │
-│  init │ attest create │ sign │ publish │ verify │ gate │ report    │
-└───┬───────────┬──────────┬───────┬────────┬────────┬────────┬──────┘
-    │           │          │       │        │        │        │
-    ▼           ▼          ▼       ▼        ▼        ▼        ▼
-┌────────┐ ┌────────┐ ┌───────┐ ┌─────┐ ┌───────┐ ┌──────┐ ┌──────┐
-│  Init  │ │Collect │ │ DSSE  │ │ OCI │ │Verify │ │Policy│ │Report│
-│Bootstrap│ │Prompt │ │Bundle │ │Store│ │Engine │ │Engine│ │  Gen │
-│        │ │Corpus │ │Sigstore│ │Push │ │  Sig  │ │ YAML │ │  MD  │
-│        │ │Eval   │ │PEM    │ │Pull │ │Schema │ │ Rego │ │      │
-│        │ │Route  │ │KMS    │ │     │ │Digest │ │      │ │      │
-│        │ │SLO    │ │       │ │     │ │Chain  │ │      │ │      │
-│        │ │Privacy│ │       │ │     │ │       │ │      │ │      │
-└────────┘ └────────┘ └───────┘ └─────┘ └───────┘ └──────┘ └──────┘
+```mermaid
+flowchart TB
+    subgraph CLI["CLI (cmd/llmsa)"]
+        init["init"]
+        attest["attest create"]
+        sign_cmd["sign"]
+        publish["publish"]
+        verify_cmd["verify"]
+        gate["gate"]
+        report_cmd["report"]
+        wh["webhook serve"]
+    end
+
+    subgraph Collectors["Attestation Collectors"]
+        prompt["Prompt"]
+        corpus["Corpus"]
+        eval["Eval"]
+        route["Route"]
+        slo["SLO"]
+        privacy["Privacy Engine"]
+    end
+
+    subgraph Signing["DSSE Signing"]
+        sigstore["Sigstore Keyless"]
+        pem_sign["Ed25519 PEM"]
+        kms["KMS"]
+    end
+
+    subgraph Distribution["OCI Distribution"]
+        push["Publish"]
+        pull["Pull"]
+        registry[("OCI Registry\n(GHCR / ECR / ACR)")]
+    end
+
+    subgraph Verification["Verification Engine"]
+        sig_check["1. Signature"]
+        schema_check["2. Schema"]
+        digest_check["3. Digest"]
+        chain_check["4. Chain"]
+    end
+
+    subgraph Policy["Policy Engine"]
+        yaml_gate["YAML Gates"]
+        rego_gate["Rego / OPA"]
+    end
+
+    subgraph K8s["Kubernetes"]
+        webhook["Admission Webhook"]
+        apiserver["API Server"]
+    end
+
+    attest --> Collectors
+    Collectors --> privacy
+    privacy --> sign_cmd
+    sign_cmd --> Signing
+    Signing --> publish
+    publish --> push
+    push --> registry
+    registry --> pull
+    pull --> verify_cmd
+    verify_cmd --> Verification
+    Verification --> gate
+    gate --> Policy
+    apiserver --> webhook
+    webhook --> pull
+    webhook --> Verification
 ```
 
-**Verification performs four independent checks**, each producing a specific exit code:
+## Verification Pipeline
+
+The verification engine performs four independent checks, each producing a specific exit code:
+
+```mermaid
+flowchart LR
+    Bundle["DSSE\nBundle"] --> S1
+
+    subgraph Pipeline["Four-Stage Verification"]
+        S1["1. Signature\nVerify"]
+        S2["2. Schema\nValidate"]
+        S3["3. Digest\nRecompute"]
+        S4["4. Chain\nVerify"]
+        S1 -->|pass| S2
+        S2 -->|pass| S3
+        S3 -->|pass| S4
+    end
+
+    S1 -->|fail| F1["Exit 11\nSignature Fail"]
+    S2 -->|fail| F2["Exit 14\nSchema Fail"]
+    S3 -->|fail| F3["Exit 12\nTamper Detected"]
+    S4 -->|fail| F4["Exit 14\nChain Invalid"]
+    S4 -->|pass| OK["Exit 0\nAll Checks Passed ✓"]
+
+    style F1 fill:#DC3545,color:#fff
+    style F2 fill:#DC3545,color:#fff
+    style F3 fill:#DC3545,color:#fff
+    style F4 fill:#DC3545,color:#fff
+    style OK fill:#28A745,color:#fff
+```
 
 | Check | What It Validates | Failure Exit Code |
 |---|---|---|
@@ -177,12 +318,30 @@ done
 
 The included GitHub Actions workflow (`.github/workflows/ci-attest-verify.yml`) demonstrates production-grade integration:
 
-1. **Attest** — Generates typed attestations for all LLM artifacts.
-2. **Sign** — Signs with Sigstore keyless using GitHub OIDC tokens.
-3. **Publish** — Pushes bundles to GHCR with digest-pinned references.
-4. **Verify** — Validates from both local and OCI sources.
-5. **Gate** — Enforces policy against git-diff-detected changes.
-6. **Report** — Produces JSON and Markdown audit artifacts.
+```mermaid
+flowchart LR
+    subgraph CI["GitHub Actions Pipeline"]
+        direction LR
+        T["Test\ngo test"] --> A["Attest\n5 types"]
+        A --> S["Sign\nSigstore OIDC"]
+        S --> P["Publish\nGHCR OCI"]
+        P --> V["Verify\nLocal + OCI"]
+        V --> G["Gate\nYAML + Rego"]
+        G --> R["Report\nJSON + MD"]
+    end
+
+    OIDC["GitHub OIDC\nToken"] -.-> S
+    GHCR[("GHCR\nRegistry")] <-.-> P
+    GHCR <-.-> V
+
+    style T fill:#6C757D,color:#fff
+    style A fill:#4A90D9,color:#fff
+    style S fill:#7B68EE,color:#fff
+    style P fill:#E8833A,color:#fff
+    style V fill:#28A745,color:#fff
+    style G fill:#DC3545,color:#fff
+    style R fill:#17A2B8,color:#fff
+```
 
 ## CLI Reference
 
@@ -195,6 +354,7 @@ The included GitHub Actions workflow (`.github/workflows/ci-attest-verify.yml`) 
 | `llmsa verify` | Validate signatures, schemas, digests, and chain |
 | `llmsa gate` | Enforce policy gates (exit 13 on violation) |
 | `llmsa report` | Convert JSON verification output to Markdown |
+| `llmsa webhook serve` | Start the Kubernetes validating admission webhook server |
 | `llmsa demo run` | Execute the full end-to-end pipeline |
 
 ### Exit Codes
@@ -222,6 +382,7 @@ The included GitHub Actions workflow (`.github/workflows/ci-attest-verify.yml`) 
 | Schema Validation | gojsonschema | JSON Schema validation for all statement types |
 | OCI Distribution | go-containerregistry | Publish/pull attestation bundles to/from registries |
 | Envelope Format | DSSE | Industry-standard signing envelope (in-toto compatible) |
+| Admission Control | K8s Admission API v1 | Deployment-time attestation enforcement |
 
 ## Project Structure
 
@@ -236,10 +397,15 @@ internal/
 │   └── rego/           OPA integration engine
 ├── store/              OCI registry publish/pull with digest pinning
 ├── hash/               Canonical JSON serialisation and tree hashing
-└── report/             Markdown report generator
+├── report/             Markdown report generator
+└── webhook/            Kubernetes validating admission webhook handler
 pkg/types/              Shared type definitions (Statement, Privacy, etc.)
 policy/examples/        Reference YAML and Rego policy files
 examples/tiny-rag/      Complete working RAG system with all 5 attestation types
+deploy/
+├── webhook/            Kubernetes manifests (Deployment, Service, ValidatingWebhookConfiguration)
+└── helm/               Helm chart for webhook deployment
+test/e2e/               End-to-end integration tests
 scripts/
 ├── benchmark.sh        Performance benchmarks with reproducibility metrics
 └── tamper-tests.sh     20-case security validation suite
@@ -248,7 +414,7 @@ docs/
 ├── threat-model.md     Threat coverage and mitigation analysis
 ├── policy-guide.md     Gate model and privacy guard documentation
 ├── benchmark-methodology.md  Benchmark design and limitations
-└── k8s-admission.md    Kubernetes validating webhook (planned)
+└── k8s-admission.md    Kubernetes validating webhook deployment guide
 ```
 
 ## Documentation
@@ -257,11 +423,11 @@ docs/
 - [Threat Model](docs/threat-model.md) — Attack surfaces, mitigations, and known limitations.
 - [Policy Guide](docs/policy-guide.md) — Gate configuration, privacy guards, and Rego integration.
 - [Benchmark Methodology](docs/benchmark-methodology.md) — Determinism, tamper detection, and performance benchmarks.
-- [Kubernetes Admission](docs/k8s-admission.md) — Planned validating webhook for deployment-time enforcement.
+- [Kubernetes Admission](docs/k8s-admission.md) — Validating webhook deployment, configuration, and troubleshooting.
 
 ## Roadmap
 
-- **v1.0**: Kubernetes validating admission webhook for deployment-time attestation enforcement.
+- **v1.0** (shipped): Kubernetes validating admission webhook for deployment-time attestation enforcement.
 - **Rekor integration**: Transparency log proofs for public auditability.
 - **KMS provider**: AWS KMS / GCP Cloud KMS / Azure Key Vault signing backends.
 - **Multi-model chain attestations**: Cross-model dependency tracking for ensemble and pipeline architectures.

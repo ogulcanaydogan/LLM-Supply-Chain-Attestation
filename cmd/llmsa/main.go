@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,6 +18,7 @@ import (
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/sign"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/store"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/verify"
+	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/webhook"
 	"github.com/spf13/cobra"
 )
 
@@ -56,6 +58,7 @@ func newRootCommand() *cobra.Command {
 	root.AddCommand(newGateCommand())
 	root.AddCommand(newReportCommand())
 	root.AddCommand(newDemoCommand())
+	root.AddCommand(newWebhookCommand())
 	return root
 }
 
@@ -543,3 +546,50 @@ gates:
     required_attestations: []
     message: "Sensitive payload exposure blocked by policy."
 `
+
+func newWebhookCommand() *cobra.Command {
+	webhookCmd := &cobra.Command{
+		Use:   "webhook",
+		Short: "Kubernetes admission webhook",
+	}
+
+	var port int
+	var tlsCert, tlsKey, policy, schemaDir, registryPrefix string
+	var failOpen bool
+
+	serveCmd := &cobra.Command{
+		Use:   "serve",
+		Short: "Start the validating admission webhook server",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			cfg := webhook.Config{
+				Port:           port,
+				TLSCertPath:    tlsCert,
+				TLSKeyPath:     tlsKey,
+				PolicyPath:     policy,
+				SchemaDir:      schemaDir,
+				RegistryPrefix: registryPrefix,
+				FailOpen:       failOpen,
+			}
+			mux := http.NewServeMux()
+			mux.Handle("/validate", webhook.Handler(cfg))
+			mux.Handle("/healthz", webhook.HealthHandler())
+
+			addr := fmt.Sprintf(":%d", cfg.Port)
+			fmt.Fprintf(os.Stderr, "webhook listening on %s\n", addr)
+			if cfg.TLSCertPath != "" && cfg.TLSKeyPath != "" {
+				return http.ListenAndServeTLS(addr, cfg.TLSCertPath, cfg.TLSKeyPath, mux)
+			}
+			return http.ListenAndServe(addr, mux)
+		},
+	}
+	serveCmd.Flags().IntVar(&port, "port", 8443, "webhook listen port")
+	serveCmd.Flags().StringVar(&tlsCert, "tls-cert", "", "TLS certificate path")
+	serveCmd.Flags().StringVar(&tlsKey, "tls-key", "", "TLS key path")
+	serveCmd.Flags().StringVar(&policy, "policy", "", "policy YAML path")
+	serveCmd.Flags().StringVar(&schemaDir, "schema-dir", "schemas/v1", "schema directory")
+	serveCmd.Flags().StringVar(&registryPrefix, "registry-prefix", "", "OCI registry prefix for attestation bundles")
+	serveCmd.Flags().BoolVar(&failOpen, "fail-open", false, "allow pods when verification encounters an error")
+
+	webhookCmd.AddCommand(serveCmd)
+	return webhookCmd
+}

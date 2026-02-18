@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "llmsa-webhook.fullname" . }}
+  labels:
+    {{- include "llmsa-webhook.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "llmsa-webhook.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "llmsa-webhook.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "llmsa-webhook.fullname" . }}
+      containers:
+        - name: webhook
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - llmsa
+            - webhook
+            - serve
+            - --port={{ .Values.webhook.port }}
+            - --tls-cert=/certs/tls.crt
+            - --tls-key=/certs/tls.key
+            - --registry-prefix={{ .Values.registryPrefix }}
+            - --schema-dir={{ .Values.schemaDir }}
+            {{- if .Values.failOpen }}
+            - --fail-open
+            {{- end }}
+          ports:
+            - containerPort: {{ .Values.webhook.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.webhook.port }}
+              scheme: HTTPS
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: {{ .Values.webhook.port }}
+              scheme: HTTPS
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tls-certs
+              mountPath: /certs
+              readOnly: true
+      volumes:
+        - name: tls-certs
+          secret:
+            secretName: {{ .Values.tls.secretName }}
