@@ -1,9 +1,13 @@
 package yaml
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/hash"
+	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/sign"
 )
 
 func TestLoadPolicy(t *testing.T) {
@@ -312,5 +316,240 @@ func TestEvaluateWithChanged_MultipleGates(t *testing.T) {
 	}
 	if len(violations) != 2 {
 		t.Fatalf("expected 2 violations, got %d: %v", len(violations), violations)
+	}
+}
+
+// --- LoadStatements Tests ---
+
+func writeStatement(t *testing.T, dir, name string, attType, stmtID, privacyMode string) string {
+	t.Helper()
+	stmt := map[string]any{
+		"attestation_type": attType,
+		"statement_id":     stmtID,
+		"privacy": map[string]any{
+			"mode": privacyMode,
+		},
+	}
+	raw, _ := json.MarshalIndent(stmt, "", "  ")
+	path := filepath.Join(dir, name)
+	os.WriteFile(path, raw, 0o644)
+	return path
+}
+
+func writeBundle(t *testing.T, dir, name string, attType, stmtID, privacyMode string) string {
+	t.Helper()
+	statement := map[string]any{
+		"schema_version":   "1.0.0",
+		"statement_id":     stmtID,
+		"attestation_type": attType,
+		"predicate_type":   "https://llmsa.dev/attestation/prompt/v1",
+		"generated_at":     "2026-01-01T00:00:00Z",
+		"generator":        map[string]any{"name": "llmsa", "version": "0.1.0", "git_sha": "abc"},
+		"subject":          []any{},
+		"predicate": map[string]any{
+			"prompt_bundle_digest": "sha256:abc",
+			"system_prompt_digest": "sha256:def",
+			"template_digests":     []any{},
+			"tool_schema_digests":  []any{},
+			"safety_policy_digest": "sha256:safe",
+		},
+		"privacy": map[string]any{"mode": privacyMode},
+	}
+
+	keyPath := filepath.Join(dir, "key.pem")
+	if _, err := os.Stat(keyPath); os.IsNotExist(err) {
+		sign.GeneratePEMPrivateKey(keyPath)
+	}
+	signer, _ := sign.NewPEMSigner(keyPath)
+	canonical, _ := hash.CanonicalJSON(statement)
+	material, _ := signer.Sign(canonical)
+	bundle, _ := sign.CreateBundle(statement, material)
+
+	bundlePath := filepath.Join(dir, name)
+	sign.WriteBundle(bundlePath, bundle)
+	return bundlePath
+}
+
+func TestLoadStatements_FromDirectory(t *testing.T) {
+	dir := t.TempDir()
+	writeStatement(t, dir, "prompt.json", "prompt_attestation", "s1", "hash_only")
+	writeStatement(t, dir, "eval.json", "eval_attestation", "s2", "hash_only")
+
+	views, err := LoadStatements(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 2 {
+		t.Fatalf("expected 2 statements, got %d", len(views))
+	}
+	types := map[string]bool{}
+	for _, v := range views {
+		types[v.AttestationType] = true
+	}
+	if !types["prompt_attestation"] || !types["eval_attestation"] {
+		t.Errorf("missing expected types: %v", types)
+	}
+}
+
+func TestLoadStatements_FromSingleFile(t *testing.T) {
+	dir := t.TempDir()
+	path := writeStatement(t, dir, "single.json", "corpus_attestation", "c1", "hash_only")
+
+	views, err := LoadStatements(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 1 {
+		t.Fatalf("expected 1 statement, got %d", len(views))
+	}
+	if views[0].AttestationType != "corpus_attestation" {
+		t.Errorf("type = %q", views[0].AttestationType)
+	}
+}
+
+func TestLoadStatements_BundleFile(t *testing.T) {
+	dir := t.TempDir()
+	writeBundle(t, dir, "prompt.bundle.json", "prompt_attestation", "b1", "hash_only")
+
+	views, err := LoadStatements(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 1 {
+		t.Fatalf("expected 1 statement from bundle, got %d", len(views))
+	}
+	if views[0].StatementID != "b1" {
+		t.Errorf("statement_id = %q", views[0].StatementID)
+	}
+}
+
+func TestLoadStatements_MixedFiles(t *testing.T) {
+	dir := t.TempDir()
+	writeStatement(t, dir, "eval.json", "eval_attestation", "s1", "hash_only")
+	writeBundle(t, dir, "prompt.bundle.json", "prompt_attestation", "b1", "hash_only")
+
+	views, err := LoadStatements(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 2 {
+		t.Fatalf("expected 2 statements from mixed dir, got %d", len(views))
+	}
+}
+
+func TestLoadStatements_EmptyDir(t *testing.T) {
+	dir := t.TempDir()
+	views, err := LoadStatements(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 0 {
+		t.Errorf("expected 0 statements from empty dir, got %d", len(views))
+	}
+}
+
+func TestLoadStatements_NonexistentPath(t *testing.T) {
+	_, err := LoadStatements("/nonexistent/path")
+	if err == nil {
+		t.Fatal("expected error for nonexistent path")
+	}
+}
+
+func TestLoadStatements_IgnoresSubdirectories(t *testing.T) {
+	dir := t.TempDir()
+	writeStatement(t, dir, "prompt.json", "prompt_attestation", "s1", "hash_only")
+	os.MkdirAll(filepath.Join(dir, "subdir"), 0o755)
+
+	views, err := LoadStatements(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 1 {
+		t.Errorf("expected 1 statement, got %d (should skip subdir)", len(views))
+	}
+}
+
+func TestLoadStatements_PrivacyModeExtracted(t *testing.T) {
+	dir := t.TempDir()
+	writeStatement(t, dir, "stmt.json", "prompt_attestation", "s1", "encrypted_payload")
+
+	views, err := LoadStatements(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(views) != 1 {
+		t.Fatalf("expected 1, got %d", len(views))
+	}
+	if views[0].PrivacyMode != "encrypted_payload" {
+		t.Errorf("privacy_mode = %q, want encrypted_payload", views[0].PrivacyMode)
+	}
+}
+
+// --- ChangedFiles Tests ---
+
+func TestChangedFiles_DefaultRef(t *testing.T) {
+	// Should not panic or error on empty ref.
+	files, err := ChangedFiles("")
+	if err != nil {
+		t.Fatalf("ChangedFiles empty ref: %v", err)
+	}
+	// We don't assert on the result since it depends on git state,
+	// but we verify it returns without error.
+	_ = files
+}
+
+func TestChangedFiles_InvalidRef(t *testing.T) {
+	// A nonsense ref should return empty (graceful degradation), not error.
+	files, err := ChangedFiles("this-ref-definitely-does-not-exist-zzzz")
+	if err != nil {
+		t.Fatalf("ChangedFiles invalid ref: %v", err)
+	}
+	_ = files
+}
+
+// --- Evaluate Integration ---
+
+func TestEvaluate_WithGitRef(t *testing.T) {
+	// Test that Evaluate (which calls ChangedFiles internally) doesn't panic.
+	policy := Policy{
+		Gates: []Gate{
+			{
+				ID:                   "G001",
+				TriggerPaths:         []string{"app/**"},
+				RequiredAttestations: []string{"prompt_attestation"},
+			},
+		},
+	}
+	statements := []StatementView{
+		{AttestationType: "prompt_attestation", StatementID: "s1"},
+	}
+	violations, err := Evaluate(policy, statements, "HEAD~1")
+	if err != nil {
+		t.Fatalf("Evaluate: %v", err)
+	}
+	// Don't assert specific count since it depends on git state.
+	_ = violations
+}
+
+func TestLoadPolicy_InvalidYAML(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "bad.yaml")
+	os.WriteFile(path, []byte("not: valid: yaml: [unclosed"), 0o644)
+	_, err := LoadPolicy(path)
+	if err == nil {
+		t.Fatal("expected error for invalid YAML")
+	}
+}
+
+func TestExtract_EmptyPayload(t *testing.T) {
+	sv := extract(map[string]any{})
+	if sv.AttestationType != "" {
+		t.Errorf("expected empty type, got %q", sv.AttestationType)
+	}
+	if sv.PrivacyMode != "" {
+		t.Errorf("expected empty privacy, got %q", sv.PrivacyMode)
+	}
+	if len(sv.DependsOn) != 0 {
+		t.Errorf("expected empty depends_on, got %v", sv.DependsOn)
 	}
 }
