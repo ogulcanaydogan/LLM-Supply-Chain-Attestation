@@ -4,7 +4,7 @@ Local-first CLI + CI toolchain for tamper-evident LLM artifact attestations.
 
 ## What it does
 - Creates typed attestations for prompt/corpus/eval/route/slo artifacts.
-- Signs statements into DSSE bundles (`sigstore`-style identity metadata or PEM).
+- Signs statements into DSSE bundles (Sigstore keyless with cosign, or PEM fallback).
 - Verifies signatures, schemas, and subject digests.
 - Enforces YAML policy gates in CI.
 - Generates JSON and Markdown audit reports.
@@ -19,10 +19,10 @@ make demo
 - `llmsa init`
 - `llmsa attest create --type <prompt_attestation|corpus_attestation|eval_attestation|route_attestation|slo_attestation> --config <path> --out <dir>`
 - `llmsa attest create --changed-only --git-ref <ref> --out <dir>`
-- `llmsa sign --in <statement.json> --provider <sigstore|pem|kms> --out <bundle.json>`
+- `llmsa sign --in <statement.json> --provider <sigstore|pem|kms> [--out <bundle.json|dir>]`
 - `llmsa publish --in <bundle.json> --oci <registry/repo:tag>`
-- `llmsa verify --source local --attestations <dir> --policy <file> --format <json|md> --out <file>`
-- `llmsa gate --policy <file> --attestations <dir>`
+- `llmsa verify --source <local|oci> --attestations <dir|oci-ref[,oci-ref...]> --policy <file> --format <json|md> --out <file>`
+- `llmsa gate --source <local|oci> --policy <file> --attestations <dir|oci-ref[,oci-ref...]>`
 - `llmsa report --in <verify.json> --out <verify.md>`
 - `llmsa demo run`
 

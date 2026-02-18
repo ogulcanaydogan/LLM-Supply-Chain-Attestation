@@ -5,6 +5,11 @@
 make init
 ```
 
+Optional for keyless Sigstore signing:
+```bash
+./scripts/install-cosign.sh
+```
+
 ## 2) Generate attestations
 ```bash
 make attest

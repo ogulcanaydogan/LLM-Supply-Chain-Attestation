@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   attestation-gate:
     name: attestation-gate
@@ -19,6 +23,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.25'
+
+      - name: Setup cosign
+        uses: sigstore/cosign-installer@v3
 
       - name: Test
         run: go test ./...
@@ -38,8 +45,7 @@ jobs:
       - name: Sign bundles
         run: |
           for s in .llmsa/attestations/statement_*.json; do
-            b="${s%.json}.bundle.json"
-            go run ./cmd/llmsa sign --in "$s" --provider sigstore --out "$b"
+            go run ./cmd/llmsa sign --in "$s" --provider sigstore --out .llmsa/attestations
           done
 
       - name: Verify

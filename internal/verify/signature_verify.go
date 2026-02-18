@@ -6,6 +6,9 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -31,6 +34,13 @@ func VerifySignature(bundle sign.Bundle, policy SignerPolicy) error {
 	}
 
 	sig := bundle.Envelope.Signatures[0]
+	if sig.Provider == "sigstore" && strings.TrimSpace(sig.CertificatePEM) != "" {
+		if err := verifyWithCosign(rawPayload, sig, policy); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	pub, err := parsePublicKey(sig.PublicKeyPEM)
 	if err != nil {
 		return err
@@ -44,17 +54,65 @@ func VerifySignature(bundle sign.Bundle, policy SignerPolicy) error {
 	}
 
 	if sig.Provider == "sigstore" {
-		if policy.OIDCIssuer != "" && sig.OIDCIssuer != policy.OIDCIssuer {
-			return fmt.Errorf("oidc issuer mismatch: got %s", sig.OIDCIssuer)
+		if err := verifyIdentityPolicy(sig, policy); err != nil {
+			return err
 		}
-		if policy.IdentityRegex != "" {
-			re, err := regexp.Compile(policy.IdentityRegex)
-			if err != nil {
-				return fmt.Errorf("invalid identity regex: %w", err)
-			}
-			if !re.MatchString(sig.OIDCIdentity) {
-				return fmt.Errorf("oidc identity mismatch: %s", sig.OIDCIdentity)
-			}
+	}
+	return nil
+}
+
+func verifyWithCosign(payload []byte, sig sign.Signature, policy SignerPolicy) error {
+	if _, err := exec.LookPath("cosign"); err != nil {
+		return fmt.Errorf("cosign binary is required to verify sigstore keyless bundles: %w", err)
+	}
+
+	tmp, err := os.MkdirTemp("", "llmsa-sigstore-verify-")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmp)
+
+	payloadPath := filepath.Join(tmp, "payload.json")
+	sigPath := filepath.Join(tmp, "payload.sig")
+	certPath := filepath.Join(tmp, "payload.pem")
+	if err := os.WriteFile(payloadPath, payload, 0o600); err != nil {
+		return err
+	}
+	if err := os.WriteFile(sigPath, []byte(strings.TrimSpace(sig.Sig)+"\n"), 0o600); err != nil {
+		return err
+	}
+	if err := os.WriteFile(certPath, []byte(sig.CertificatePEM), 0o600); err != nil {
+		return err
+	}
+
+	args := []string{"verify-blob", "--signature", sigPath, "--certificate", certPath}
+	if policy.OIDCIssuer != "" {
+		args = append(args, "--certificate-oidc-issuer", policy.OIDCIssuer)
+	}
+	if policy.IdentityRegex != "" {
+		args = append(args, "--certificate-identity-regexp", policy.IdentityRegex)
+	}
+	args = append(args, payloadPath)
+
+	cmd := exec.Command("cosign", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("sigstore verification failed (including Rekor/tlog checks): %s", strings.TrimSpace(string(output)))
+	}
+	return nil
+}
+
+func verifyIdentityPolicy(sig sign.Signature, policy SignerPolicy) error {
+	if policy.OIDCIssuer != "" && sig.OIDCIssuer != policy.OIDCIssuer {
+		return fmt.Errorf("oidc issuer mismatch: got %s", sig.OIDCIssuer)
+	}
+	if policy.IdentityRegex != "" {
+		re, err := regexp.Compile(policy.IdentityRegex)
+		if err != nil {
+			return fmt.Errorf("invalid identity regex: %w", err)
+		}
+		if !re.MatchString(sig.OIDCIdentity) {
+			return fmt.Errorf("oidc identity mismatch: %s", sig.OIDCIdentity)
 		}
 	}
 	return nil

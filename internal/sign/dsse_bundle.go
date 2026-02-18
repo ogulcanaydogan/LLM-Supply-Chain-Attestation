@@ -22,12 +22,13 @@ type Envelope struct {
 }
 
 type Signature struct {
-	KeyID        string `json:"keyid"`
-	Sig          string `json:"sig"`
-	Provider     string `json:"provider"`
-	PublicKeyPEM string `json:"public_key_pem"`
-	OIDCIssuer   string `json:"oidc_issuer,omitempty"`
-	OIDCIdentity string `json:"oidc_identity,omitempty"`
+	KeyID          string `json:"keyid"`
+	Sig            string `json:"sig"`
+	Provider       string `json:"provider"`
+	PublicKeyPEM   string `json:"public_key_pem"`
+	CertificatePEM string `json:"certificate_pem,omitempty"`
+	OIDCIssuer     string `json:"oidc_issuer,omitempty"`
+	OIDCIdentity   string `json:"oidc_identity,omitempty"`
 }
 
 type Metadata struct {
@@ -37,12 +38,13 @@ type Metadata struct {
 }
 
 type SignMaterial struct {
-	KeyID        string
-	SigB64       string
-	Provider     string
-	PublicKeyPEM string
-	OIDCIssuer   string
-	OIDCIdentity string
+	KeyID          string
+	SigB64         string
+	Provider       string
+	PublicKeyPEM   string
+	CertificatePEM string
+	OIDCIssuer     string
+	OIDCIdentity   string
 }
 
 func CreateBundle(statement any, material SignMaterial) (Bundle, error) {
@@ -57,12 +59,13 @@ func CreateBundle(statement any, material SignMaterial) (Bundle, error) {
 			PayloadType: "application/vnd.llmsa.statement.v1+json",
 			Payload:     base64.StdEncoding.EncodeToString(canonical),
 			Signatures: []Signature{{
-				KeyID:        material.KeyID,
-				Sig:          material.SigB64,
-				Provider:     material.Provider,
-				PublicKeyPEM: material.PublicKeyPEM,
-				OIDCIssuer:   material.OIDCIssuer,
-				OIDCIdentity: material.OIDCIdentity,
+				KeyID:          material.KeyID,
+				Sig:            material.SigB64,
+				Provider:       material.Provider,
+				PublicKeyPEM:   material.PublicKeyPEM,
+				CertificatePEM: material.CertificatePEM,
+				OIDCIssuer:     material.OIDCIssuer,
+				OIDCIdentity:   material.OIDCIdentity,
 			}},
 		},
 		Metadata: Metadata{

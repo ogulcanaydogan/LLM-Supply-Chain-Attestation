@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/attest"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/hash"
@@ -144,8 +146,8 @@ func newSignCommand() *cobra.Command {
 		Use:   "sign",
 		Short: "Sign a statement and emit DSSE bundle",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			if inPath == "" || outPath == "" {
-				return fmt.Errorf("--in and --out are required")
+			if inPath == "" {
+				return fmt.Errorf("--in is required")
 			}
 			raw, err := os.ReadFile(inPath)
 			if err != nil {
@@ -193,6 +195,11 @@ func newSignCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			if outPath == "" {
+				outPath = defaultBundlePath(inPath, statement)
+			} else if fi, err := os.Stat(outPath); err == nil && fi.IsDir() {
+				outPath = filepath.Join(outPath, filepath.Base(defaultBundlePath(inPath, statement)))
+			}
 			if err := sign.WriteBundle(outPath, bundle); err != nil {
 				return err
 			}
@@ -232,9 +239,6 @@ func newVerifyCommand() *cobra.Command {
 		Use:   "verify",
 		Short: "Verify bundle signatures, schemas, and digests",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			if sourceType != "local" {
-				return fmt.Errorf("only --source local is supported in MVP")
-			}
 			if sourcePath == "" {
 				sourcePath = ".llmsa/attestations"
 			}
@@ -251,7 +255,29 @@ func newVerifyCommand() *cobra.Command {
 				signerPolicy.IdentityRegex = pol.IdentityRegex
 			}
 
-			r := verify.Run(verify.Options{SourcePath: sourcePath, SchemaDir: schemaDir, SignerPolicy: signerPolicy})
+			resolvedSource := sourcePath
+			if sourceType == "oci" {
+				tmpDir, err := os.MkdirTemp("", "llmsa-oci-verify-")
+				if err != nil {
+					return err
+				}
+				defer os.RemoveAll(tmpDir)
+				refs := splitCSV(sourcePath)
+				if len(refs) == 0 {
+					return fmt.Errorf("--attestations must include at least one OCI ref for --source oci")
+				}
+				for i, ref := range refs {
+					out := filepath.Join(tmpDir, fmt.Sprintf("oci_%d.bundle.json", i+1))
+					if err := store.PullOCI(ref, out); err != nil {
+						return err
+					}
+				}
+				resolvedSource = tmpDir
+			} else if sourceType != "local" {
+				return fmt.Errorf("unsupported source %s", sourceType)
+			}
+
+			r := verify.Run(verify.Options{SourcePath: resolvedSource, SchemaDir: schemaDir, SignerPolicy: signerPolicy})
 
 			switch format {
 			case "json":
@@ -290,7 +316,7 @@ func newVerifyCommand() *cobra.Command {
 }
 
 func newGateCommand() *cobra.Command {
-	var policyPath, attestationsPath, gitRef string
+	var policyPath, attestationsPath, gitRef, sourceType string
 	cmd := &cobra.Command{
 		Use:   "gate",
 		Short: "Run policy gates and return non-zero on violations",
@@ -301,11 +327,32 @@ func newGateCommand() *cobra.Command {
 			if attestationsPath == "" {
 				attestationsPath = ".llmsa/attestations"
 			}
+			resolvedSource := attestationsPath
+			if sourceType == "oci" {
+				tmpDir, err := os.MkdirTemp("", "llmsa-oci-gate-")
+				if err != nil {
+					return err
+				}
+				defer os.RemoveAll(tmpDir)
+				refs := splitCSV(attestationsPath)
+				if len(refs) == 0 {
+					return fmt.Errorf("--attestations must include at least one OCI ref for --source oci")
+				}
+				for i, ref := range refs {
+					out := filepath.Join(tmpDir, fmt.Sprintf("oci_%d.bundle.json", i+1))
+					if err := store.PullOCI(ref, out); err != nil {
+						return err
+					}
+				}
+				resolvedSource = tmpDir
+			} else if sourceType != "local" {
+				return fmt.Errorf("unsupported source %s", sourceType)
+			}
 			policy, err := policyyaml.LoadPolicy(policyPath)
 			if err != nil {
 				return err
 			}
-			statements, err := policyyaml.LoadStatements(attestationsPath)
+			statements, err := policyyaml.LoadStatements(resolvedSource)
 			if err != nil {
 				return err
 			}
@@ -325,6 +372,7 @@ func newGateCommand() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&policyPath, "policy", "", "policy YAML path")
 	cmd.Flags().StringVar(&attestationsPath, "attestations", ".llmsa/attestations", "attestation directory or file")
+	cmd.Flags().StringVar(&sourceType, "source", "local", "attestation source type (local|oci)")
 	cmd.Flags().StringVar(&gitRef, "git-ref", "HEAD~1", "git reference for changed-file triggers")
 	return cmd
 }
@@ -381,6 +429,37 @@ func canonicalPayload(statement map[string]any) ([]byte, error) {
 func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+func defaultBundlePath(inPath string, statement map[string]any) string {
+	attType := asString(statement["attestation_type"])
+	statementID := asString(statement["statement_id"])
+	gitSHA := "local"
+	if g, ok := statement["generator"].(map[string]any); ok {
+		if v, ok := g["git_sha"].(string); ok && v != "" {
+			gitSHA = v
+		}
+	}
+	gitSHA = strings.NewReplacer("/", "_", ":", "_", " ", "_").Replace(gitSHA)
+	name := fmt.Sprintf("attestation_%s_%s_%s.bundle.json", attType, gitSHA, statementID)
+	return filepath.Join(filepath.Dir(inPath), name)
+}
+
+func asString(v any) string {
+	s, _ := v.(string)
+	return s
+}
+
+func splitCSV(raw string) []string {
+	parts := strings.Split(raw, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }
 
 const defaultConfigYAML = `collectors:
