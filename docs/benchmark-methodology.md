@@ -1,136 +1,116 @@
 # Benchmark Methodology
 
-This document describes the benchmark methodology used to validate the correctness, determinism, and performance characteristics of the LLM Supply-Chain Attestation framework. All benchmarks are designed to be fully reproducible and produce machine-readable artifacts.
+This document describes what the current benchmark and tamper harnesses actually measure in this repository.
 
-## Benchmark Categories
+## Scripts
 
-### 1. Determinism Validation
+- Performance/reproducibility: `/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/scripts/benchmark.sh`
+- Tamper suite (20 seeded cases): `/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/scripts/tamper-tests.sh`
 
-Attestation generation must be deterministic — running the same command with the same inputs must produce identical statement hashes. Non-determinism would undermine the integrity of the verification pipeline, as re-generated attestations would not match previously signed bundles.
+## Measured Benchmark Dimensions
 
-**Methodology**: The `--determinism-check N` flag runs attestation generation N times and compares the canonical JSON hashes of each output. If any pair differs, the check fails with a descriptive error identifying the divergent fields.
+### 1. Signing overhead
 
-```bash
-go run ./cmd/llmsa attest create \
-  --type prompt_attestation \
-  --config examples/tiny-rag/configs/prompt.yaml \
-  --out /tmp/determinism \
-  --determinism-check 5
-```
+`scripts/benchmark.sh` measures total wall-clock signing duration for workload sizes:
 
-**Expected result**: All 5 runs produce identical SHA-256 hashes. Known sources of non-determinism (timestamps, UUIDs) are excluded from the comparison by using canonical JSON encoding.
+- 1 statement
+- 10 statements
+- 100 statements
 
-### 2. Tamper Detection
+Metric emitted: `sign_total` duration in milliseconds.
 
-The verification engine must detect modifications to any subject file referenced in an attestation statement. This validates the core security property of the framework.
+### 2. Verification overhead
 
-**Methodology**: The tamper detection suite (`scripts/tamper-tests.sh`) runs 20 test cases across all five attestation types:
+The same workloads are verified with `llmsa verify` against local bundles.
 
-1. Generate a valid attestation and sign it.
-2. Modify a subject file (append bytes, truncate, replace content, zero-fill).
-3. Run verification and assert exit code 12 (digest mismatch).
-4. Restore the original file.
+Metric emitted: `verify_total` duration in milliseconds.
 
-```bash
-./scripts/tamper-tests.sh
-```
+### 3. Policy evaluation cost at scale
 
-**Expected result**: All 20 cases produce exit code 12. Zero false negatives (tampered files passing verification) and zero false positives (unmodified files failing verification).
+`llmsa gate` is executed 100 times per iteration.
 
-### 3. Signature Verification
+Metric emitted: `policy_total` duration in milliseconds for 100 evaluations.
 
-Signature spoofing attempts must be detected. The benchmark validates both positive cases (valid signatures pass) and negative cases (corrupted, truncated, or replaced signatures fail).
+### 4. Reproducibility stability
 
-**Methodology**:
-1. Sign a bundle with a known PEM key.
-2. Verify the bundle passes (exit code 0).
-3. Corrupt the `sig` field in the bundle JSON.
-4. Verify the corrupted bundle fails (exit code 11).
-5. Replace the public key with a different key.
-6. Verify the mismatched key fails (exit code 11).
+Prompt attestation generation is repeated and normalized hashes are compared (excluding runtime nonce fields).
 
-### 4. Policy Gate Enforcement
+Metrics emitted:
 
-Policy gates must correctly block deployments when required attestation types are missing for changed files.
+- `stable` (boolean)
+- `stability_rate` (0.0/1.0)
 
-**Methodology**:
-1. Configure a policy with gates for all five attestation types.
-2. Simulate file changes that trigger each gate.
-3. Run the gate engine with complete attestations — assert zero violations.
-4. Remove one attestation type — assert the corresponding gate produces a violation.
-5. Test privacy mode enforcement — assert `plaintext_explicit` is blocked without allowlisting.
+## Tamper Suite Scope (20 Cases)
 
-### 5. Provenance Chain Integrity
+`scripts/tamper-tests.sh` executes 20 deterministic mutation cases:
 
-The dependency graph between attestation types must be validated correctly.
+- 10 subject byte mutations (expected `exit 12`)
+- 4 signature/bundle mutations (expected `exit 11`)
+- 3 schema mutations with valid re-signing (expected `exit 14`)
+- 3 provenance-chain integrity mutations (expected `exit 14`)
 
-**Methodology**:
-1. Generate all five attestation types with correct temporal ordering.
-2. Verify the chain report shows all four edges satisfied (eval→prompt, eval→corpus, route→eval, slo→route).
-3. Remove a predecessor attestation and verify the chain reports a violation.
-4. Alter timestamps to violate temporal ordering and verify detection.
+Each case records expected vs. actual exit code and fails the run if any mismatch occurs.
 
-### 6. Performance Benchmarks
+## Output Artifacts
 
-Pipeline performance is measured to ensure the framework adds minimal overhead to CI/CD pipelines.
+### Benchmark artifacts
 
-**Methodology**: The benchmark suite (`scripts/benchmark.sh`) measures wall-clock time for each pipeline stage:
+Per run, outputs are written under:
 
-| Stage | Operation | Target |
-|-------|-----------|--------|
-| Attest | Generate all 5 attestation types | < 500ms |
-| Sign | PEM-sign all 5 bundles | < 200ms |
-| Verify | Four-stage verification pipeline | < 1s |
-| Gate | Policy evaluation (YAML engine) | < 100ms |
-| Gate | Policy evaluation (Rego engine) | < 200ms |
-| Report | Markdown report generation | < 100ms |
-| Publish | OCI registry push (per bundle) | Network-dependent |
+`/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/.llmsa/benchmarks/<timestamp>/`
 
-```bash
-./scripts/benchmark.sh
-```
+Key files:
 
-## Reproducibility Requirements
+- `raw/timings.csv`
+- `raw/reproducibility.json`
+- `raw/run-manifest.json`
+- `summary.md`
 
-All benchmark runs must capture:
+A monthly summary is also written to:
 
-1. **Environment metadata**: Go version, OS, architecture, CPU cores, available memory.
-2. **Git provenance**: Commit SHA, branch, and dirty state.
-3. **Raw results**: JSON or CSV output with individual timing data.
-4. **Markdown summary**: Human-readable report with key metrics and observations.
+`/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/docs/benchmarks/YYYY-MM.md`
 
-These artifacts are stored in the CI pipeline as build artifacts for auditability.
+### Tamper artifacts
 
-## E2E Integration Tests
+Outputs are written under:
 
-The Go-based E2E test suite (`test/e2e/`) serves as an automated benchmark that runs in CI:
+`/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/.llmsa/tamper/`
 
-| Test | What It Validates |
-|------|-------------------|
-| `TestFullPipeline_AttestSignVerify` | Complete 5-type pipeline produces exit code 0 |
-| `TestFullPipeline_TamperDetection` | Modified subject file produces exit code 12 |
-| `TestFullPipeline_ChainVerification` | All 4 provenance chain edges are satisfied |
-| `TestFullPipeline_MissingAttestation` | Empty directory produces exit code 10 |
-| `TestFullPipeline_SignatureCorruption` | Corrupted signature produces exit code 11 |
-| `TestFullPipeline_DeterminismCheck` | Determinism validation runs without panic |
+Key files:
 
-Run the E2E suite:
+- `results.csv`
+- `results.json`
+- `results.md`
 
-```bash
-go test -tags=e2e -v -timeout 120s ./test/e2e/
-```
+## Reproducibility Manifest Requirements
 
-## CI/CD Benchmark Integration
+`run-manifest.json` includes:
 
-The nightly benchmark workflow (`.github/workflows/nightly-benchmark.yml`) runs the full benchmark suite on a schedule, tracking performance trends over time. Results are uploaded as build artifacts and can be compared across commits to detect performance regressions.
+- generation timestamp (UTC)
+- git SHA
+- working tree status
+- Go version
+- platform and CPU architecture
+- Python version
 
-## Interpreting Results
+## CI Integration
 
-A healthy benchmark run produces:
-- **Zero failed tamper detection cases** (20/20 pass).
-- **Zero false positives** in signature verification.
-- **All provenance chain edges satisfied** when all five types are present.
-- **Sub-second total pipeline time** for the standard five-type attestation set.
-- **Deterministic hashes** across repeated runs.
+Nightly workflow:
 
-Any deviation from these baselines indicates a regression that should be investigated before release.
+`/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/.github/workflows/nightly-benchmark.yml`
+
+It executes both scripts and uploads:
+
+- `.llmsa/benchmarks/**`
+- `.llmsa/tamper/**`
+- `docs/benchmarks/*.md`
+
+## Interpretation Guidance
+
+Use trend comparison across nightly runs, not single-run score claims.
+
+Red flags:
+
+- any tamper case not matching expected exit code
+- reproducibility `stable=false`
+- abrupt timing regressions in `sign_total`, `verify_total`, or `policy_total`

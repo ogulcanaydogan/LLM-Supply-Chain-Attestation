@@ -556,19 +556,21 @@ func newWebhookCommand() *cobra.Command {
 	var port int
 	var tlsCert, tlsKey, policy, schemaDir, registryPrefix string
 	var failOpen bool
+	var cacheTTLSeconds int
 
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start the validating admission webhook server",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			cfg := webhook.Config{
-				Port:           port,
-				TLSCertPath:    tlsCert,
-				TLSKeyPath:     tlsKey,
-				PolicyPath:     policy,
-				SchemaDir:      schemaDir,
-				RegistryPrefix: registryPrefix,
-				FailOpen:       failOpen,
+				Port:            port,
+				TLSCertPath:     tlsCert,
+				TLSKeyPath:      tlsKey,
+				PolicyPath:      policy,
+				SchemaDir:       schemaDir,
+				RegistryPrefix:  registryPrefix,
+				FailOpen:        failOpen,
+				CacheTTLSeconds: cacheTTLSeconds,
 			}
 			mux := http.NewServeMux()
 			mux.Handle("/validate", webhook.Handler(cfg))
@@ -589,6 +591,7 @@ func newWebhookCommand() *cobra.Command {
 	serveCmd.Flags().StringVar(&schemaDir, "schema-dir", "schemas/v1", "schema directory")
 	serveCmd.Flags().StringVar(&registryPrefix, "registry-prefix", "", "OCI registry prefix for attestation bundles")
 	serveCmd.Flags().BoolVar(&failOpen, "fail-open", false, "allow pods when verification encounters an error")
+	serveCmd.Flags().IntVar(&cacheTTLSeconds, "cache-ttl-seconds", 300, "successful verification cache TTL in seconds")
 
 	webhookCmd.AddCommand(serveCmd)
 	return webhookCmd

@@ -83,9 +83,47 @@ jobs:
           merge-multiple: true
           path: dist
 
+      - name: Generate and verify attestation set
+        run: |
+          go run ./cmd/llmsa init
+          rm -rf .llmsa/attestations
+          mkdir -p .llmsa/attestations
+          for typ in prompt_attestation corpus_attestation eval_attestation route_attestation slo_attestation; do
+            go run ./cmd/llmsa attest create --type "$typ" --config "examples/tiny-rag/configs/${typ%_attestation}.yaml" --out .llmsa/attestations --determinism-check 2
+          done
+          for s in .llmsa/attestations/statement_*.json; do
+            go run ./cmd/llmsa sign \
+              --in "$s" \
+              --provider sigstore \
+              --key .llmsa/dev_ed25519.pem \
+              --oidc-issuer https://token.actions.githubusercontent.com \
+              --oidc-identity "https://github.com/${GITHUB_REPOSITORY}/.github/workflows/release.yml@${GITHUB_REF}" \
+              --out .llmsa/attestations
+          done
+          bundle_count="$(ls .llmsa/attestations/*.bundle.json | wc -l | tr -d '[:space:]')"
+          if [[ "$bundle_count" != "5" ]]; then
+            echo "expected 5 attestation bundles, got ${bundle_count}"
+            exit 1
+          fi
+          go run ./cmd/llmsa verify \
+            --source local \
+            --attestations .llmsa/attestations \
+            --policy policy/examples/mvp-gates.yaml \
+            --format json \
+            --out dist/attestation-verify.json
+          go run ./cmd/llmsa report \
+            --in dist/attestation-verify.json \
+            --out dist/attestation-verify.md
+          go run ./cmd/llmsa gate \
+            --policy policy/examples/mvp-gates.yaml \
+            --attestations .llmsa/attestations \
+            --git-ref HEAD
+          cp .llmsa/attestations/*.bundle.json dist/
+
       - name: Generate checksums
         run: |
-          (cd dist && sha256sum llmsa-* > checksums.txt)
+          rm -f dist/checksums.txt
+          (cd dist && find . -maxdepth 1 -type f ! -name '*.sig' ! -name '*.pem' -print0 | sort -z | xargs -0 sha256sum | sed 's|^\./||' > checksums.txt)
 
       - name: Install syft
         uses: anchore/sbom-action/download-syft@v0

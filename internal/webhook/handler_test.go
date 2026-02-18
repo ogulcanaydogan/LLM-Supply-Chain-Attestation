@@ -89,7 +89,7 @@ func TestAttestationRef_EmptyPrefix(t *testing.T) {
 
 // --- Handler Tests ---
 
-func writeValidBundle(t *testing.T, dir string) {
+func writeValidBundle(t testing.TB, dir string) {
 	t.Helper()
 
 	// Generate a real PEM key and sign properly so verify.Run passes.
@@ -140,7 +140,7 @@ func writeValidBundle(t *testing.T, dir string) {
 	}
 }
 
-func buildAdmissionReview(t *testing.T, obj any) []byte {
+func buildAdmissionReview(t testing.TB, obj any) []byte {
 	t.Helper()
 	raw, err := json.Marshal(obj)
 	if err != nil {
@@ -202,6 +202,52 @@ func TestHandlerAllowValidAttestation(t *testing.T) {
 	}
 	if !resp.Response.Allowed {
 		t.Errorf("expected allowed, got denied: %s", resp.Response.Result.Message)
+	}
+}
+
+func TestHandlerCachesSuccessfulVerification(t *testing.T) {
+	bundleDir := t.TempDir()
+	writeValidBundle(t, bundleDir)
+
+	original := ociPullFunc
+	pullCount := 0
+	ociPullFunc = func(_ string, outPath string) error {
+		pullCount++
+		data, err := os.ReadFile(filepath.Join(bundleDir, "bundle.bundle.json"))
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(outPath, data, 0o644)
+	}
+	t.Cleanup(func() { ociPullFunc = original })
+
+	cfg := Config{
+		RegistryPrefix:  "ghcr.io/test/attestations",
+		SchemaDir:       "../../schemas/v1",
+		CacheTTLSeconds: 60,
+	}
+	handler := Handler(cfg)
+
+	pod := corev1.Pod{
+		TypeMeta: metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+		Spec:     corev1.PodSpec{Containers: []corev1.Container{{Name: "app", Image: "myapp@sha256:abc123"}}},
+	}
+	body := buildAdmissionReview(t, pod)
+
+	for i := 0; i < 2; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/validate", bytes.NewReader(body))
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		var resp admissionv1.AdmissionReview
+		if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+			t.Fatalf("decode response: %v", err)
+		}
+		if resp.Response == nil || !resp.Response.Allowed {
+			t.Fatalf("expected allowed response on iteration %d, got %#v", i, resp.Response)
+		}
+	}
+	if pullCount != 1 {
+		t.Fatalf("expected exactly one OCI pull with warm cache, got %d", pullCount)
 	}
 }
 
@@ -339,5 +385,48 @@ func TestPodSpecFromResource_UnsupportedKind(t *testing.T) {
 	_, err := podSpecFromResource(raw)
 	if err == nil {
 		t.Fatal("expected error for unsupported kind")
+	}
+}
+
+func BenchmarkHandlerWarmCache(b *testing.B) {
+	bundleDir := b.TempDir()
+	writeValidBundle(b, bundleDir)
+
+	original := ociPullFunc
+	defer func() { ociPullFunc = original }()
+	pullCount := 0
+	ociPullFunc = func(_ string, outPath string) error {
+		pullCount++
+		data, err := os.ReadFile(filepath.Join(bundleDir, "bundle.bundle.json"))
+		if err != nil {
+			return err
+		}
+		return os.WriteFile(outPath, data, 0o644)
+	}
+
+	cfg := Config{
+		RegistryPrefix:  "ghcr.io/test/attestations",
+		SchemaDir:       "../../schemas/v1",
+		CacheTTLSeconds: 120,
+	}
+	handler := Handler(cfg)
+	pod := corev1.Pod{
+		TypeMeta: metav1.TypeMeta{Kind: "Pod", APIVersion: "v1"},
+		Spec:     corev1.PodSpec{Containers: []corev1.Container{{Name: "app", Image: "myapp@sha256:bench"}}},
+	}
+	body := buildAdmissionReview(b, pod)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/validate", bytes.NewReader(body))
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			b.Fatalf("unexpected status code %d", rec.Code)
+		}
+	}
+	b.StopTimer()
+	if pullCount > 1 {
+		b.Fatalf("expected warm cache to avoid repeated pulls, pull count=%d", pullCount)
 	}
 }

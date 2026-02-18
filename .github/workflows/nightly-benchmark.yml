@@ -14,6 +14,9 @@ jobs:
         with:
           go-version: '1.25'
 
+      - name: Ensure benchmark scripts are executable
+        run: chmod +x scripts/benchmark.sh scripts/tamper-tests.sh
+
       - name: Run benchmark
         run: ./scripts/benchmark.sh
 
@@ -25,5 +28,6 @@ jobs:
         with:
           name: llmsa-nightly
           path: |
-            verify.json
-            examples/tiny-rag/out/*
+            .llmsa/benchmarks/**
+            .llmsa/tamper/**
+            docs/benchmarks/*.md

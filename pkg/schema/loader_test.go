@@ -1,6 +1,10 @@
 package schema
 
-import "testing"
+import (
+	"path/filepath"
+	"strings"
+	"testing"
+)
 
 func TestValidateStatementSchema(t *testing.T) {
 	doc := map[string]any{
@@ -37,5 +41,28 @@ func TestValidateStatementSchema(t *testing.T) {
 	}
 	if len(errs) != 0 {
 		t.Fatalf("schema should pass: %v", errs)
+	}
+}
+
+func TestValidateInvalidDocument(t *testing.T) {
+	doc := map[string]any{
+		"attestation_type": "prompt_attestation",
+	}
+	errs, err := Validate("../../schemas/v1/statement.schema.json", doc)
+	if err != nil {
+		t.Fatalf("unexpected validation error: %v", err)
+	}
+	if len(errs) == 0 {
+		t.Fatal("expected schema violations")
+	}
+}
+
+func TestValidateMissingSchemaFile(t *testing.T) {
+	_, err := Validate(filepath.Join(t.TempDir(), "missing.schema.json"), map[string]any{})
+	if err == nil {
+		t.Fatal("expected schema loader error")
+	}
+	if !strings.Contains(err.Error(), "validate") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }

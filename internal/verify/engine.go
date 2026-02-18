@@ -18,7 +18,13 @@ type Options struct {
 }
 
 func Run(opts Options) Report {
-	report := Report{Passed: true, ExitCode: ExitPass}
+	report := Report{
+		Passed:   true,
+		ExitCode: ExitPass,
+		Chain: ChainReport{
+			Valid: true,
+		},
+	}
 	paths, err := bundlePaths(opts.SourcePath)
 	if err != nil {
 		report.Passed = false
@@ -88,15 +94,19 @@ func Run(opts Options) Report {
 		})
 	}
 
-	report.Chain = VerifyProvenanceChain(chainStatements)
-	if report.Chain.Valid {
-		report.Checks = append(report.Checks, CheckResult{Bundle: "<all>", Check: "chain_graph", Passed: true, Message: "ok"})
-	} else {
-		msg := strings.Join(report.Chain.Violations, "; ")
-		if msg == "" {
-			msg = "invalid provenance chain"
+	if report.Passed {
+		report.Chain = VerifyProvenanceChain(chainStatements)
+		if report.Chain.Valid {
+			report.Checks = append(report.Checks, CheckResult{Bundle: "<all>", Check: "chain_graph", Passed: true, Message: "ok"})
+		} else {
+			msg := strings.Join(report.Chain.Violations, "; ")
+			if msg == "" {
+				msg = "invalid provenance chain"
+			}
+			report.addFailure("<all>", "chain_graph", ExitSchemaFail, fmt.Errorf("%s", msg))
 		}
-		report.addFailure("<all>", "chain_graph", ExitSchemaFail, fmt.Errorf("%s", msg))
+	} else {
+		report.Checks = append(report.Checks, CheckResult{Bundle: "<all>", Check: "chain_graph", Passed: false, Message: "skipped due to earlier verification failures"})
 	}
 
 	if report.Passed {

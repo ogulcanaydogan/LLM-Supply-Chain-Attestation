@@ -63,6 +63,7 @@ sed -i "s/<CA_BUNDLE_BASE64>/$CA_BUNDLE/" deploy/webhook/validatingwebhookconfig
 | `--schema-dir` | `schemas/v1` | Path to JSON schema directory |
 | `--registry-prefix` | | OCI registry prefix for attestation bundle lookups |
 | `--fail-open` | `false` | Allow pods through when verification encounters an error |
+| `--cache-ttl-seconds` | `300` | Cache successful image verification results to reduce repeated OCI pulls |
 
 ## Namespace Opt-in
 
@@ -85,6 +86,8 @@ For each container image in the submitted resource:
 5. **Return allow or deny** with a descriptive message.
 
 If any image fails verification, the entire resource is denied.
+
+Successful verification decisions are cached per image-derived attestation reference for the configured TTL. This reduces admission latency for repeated deploys of the same digest and lowers registry load. Failed verifications are not cached.
 
 ## Fail-Open vs Fail-Closed
 

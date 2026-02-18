@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"math/big"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -93,6 +94,37 @@ func TestSignMaterialFromCosignOutputsEmptySigFails(t *testing.T) {
 	_, err := signMaterialFromCosignOutputs("", "cert", "https://issuer", "https://identity")
 	if err == nil {
 		t.Fatalf("expected error for empty signature")
+	}
+}
+
+func TestSigstoreSignerSignWithPEMFallback(t *testing.T) {
+	tmp := t.TempDir()
+	keyPath := filepath.Join(tmp, "dev.pem")
+	if err := GeneratePEMPrivateKey(keyPath); err != nil {
+		t.Fatal(err)
+	}
+	signer := &SigstoreSigner{PEMKeyPath: keyPath}
+	material, err := signer.Sign([]byte(`{"k":"v"}`))
+	if err != nil {
+		t.Fatalf("sign failed: %v", err)
+	}
+	if material.Provider != "sigstore" {
+		t.Fatalf("expected sigstore provider, got %q", material.Provider)
+	}
+	if material.OIDCIssuer == "" || material.OIDCIdentity == "" {
+		t.Fatalf("expected oidc claims to be set, got issuer=%q identity=%q", material.OIDCIssuer, material.OIDCIdentity)
+	}
+}
+
+func TestSigstoreSignerSignKeylessWithoutCosignFails(t *testing.T) {
+	t.Setenv("PATH", "")
+	signer := &SigstoreSigner{}
+	_, err := signer.Sign([]byte(`{"k":"v"}`))
+	if err == nil {
+		t.Fatal("expected error when cosign is unavailable")
+	}
+	if !strings.Contains(err.Error(), "cosign binary not found") {
+		t.Fatalf("unexpected error: %v", err)
 	}
 }
 

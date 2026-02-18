@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
+	"golang.org/x/sync/singleflight"
 	admissionv1 "k8s.io/api/admission/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
@@ -26,8 +28,10 @@ const maxBodyBytes = 10 * 1024 * 1024 // 10 MB
 
 // Handler returns an http.Handler that processes AdmissionReview requests.
 func Handler(cfg Config) http.Handler {
+	cache := newVerifierCache(time.Duration(cfg.CacheTTLSeconds) * time.Second)
+	group := &singleflight.Group{}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		handleAdmission(w, r, cfg)
+		handleAdmission(w, r, cfg, cache, group)
 	})
 }
 
@@ -39,7 +43,7 @@ func HealthHandler() http.Handler {
 	})
 }
 
-func handleAdmission(w http.ResponseWriter, r *http.Request, cfg Config) {
+func handleAdmission(w http.ResponseWriter, r *http.Request, cfg Config, cache *verifierCache, group *singleflight.Group) {
 	body, err := io.ReadAll(io.LimitReader(r.Body, maxBodyBytes))
 	if err != nil {
 		writeError(w, cfg, nil, fmt.Errorf("read body: %w", err))
@@ -65,7 +69,7 @@ func handleAdmission(w http.ResponseWriter, r *http.Request, cfg Config) {
 	refs := ExtractImageRefs(*spec)
 	var violations []string
 	for _, ref := range refs {
-		if err := verifyImage(ref, cfg); err != nil {
+		if err := verifyImage(ref, cfg, cache, group); err != nil {
 			violations = append(violations, fmt.Sprintf("container %q (%s): %v", ref.Container, ref.Image, err))
 		}
 	}
@@ -77,12 +81,37 @@ func handleAdmission(w http.ResponseWriter, r *http.Request, cfg Config) {
 	writeResponse(w, review.Request.UID, true, "all attestations verified")
 }
 
-func verifyImage(ref ImageRef, cfg Config) error {
+func verifyImage(ref ImageRef, cfg Config, cache *verifierCache, group *singleflight.Group) error {
 	ociRef, err := AttestationRef(cfg.RegistryPrefix, ref.Image)
 	if err != nil {
 		return fmt.Errorf("construct attestation ref: %w", err)
 	}
 
+	now := time.Now()
+	if cache.hasFresh(ociRef, now) {
+		return nil
+	}
+	run := func() error {
+		// Re-check cache in case another in-flight request already populated it.
+		if cache.hasFresh(ociRef, time.Now()) {
+			return nil
+		}
+		if err := verifyImageNoCache(ociRef, cfg); err != nil {
+			return err
+		}
+		cache.putSuccess(ociRef, time.Now())
+		return nil
+	}
+	if group != nil {
+		_, err, _ := group.Do(ociRef, func() (any, error) {
+			return nil, run()
+		})
+		return err
+	}
+	return run()
+}
+
+func verifyImageNoCache(ociRef string, cfg Config) error {
 	tmpDir, err := os.MkdirTemp("", "llmsa-webhook-")
 	if err != nil {
 		return fmt.Errorf("create temp dir: %w", err)
