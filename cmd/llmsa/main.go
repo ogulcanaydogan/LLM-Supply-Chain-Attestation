@@ -39,6 +39,8 @@ func main() {
 	}
 }
 
+var ociPullFunc = store.PullOCI
+
 func newRootCommand() *cobra.Command {
 	root := &cobra.Command{
 		Use:   "llmsa",
@@ -268,7 +270,7 @@ func newVerifyCommand() *cobra.Command {
 				}
 				for i, ref := range refs {
 					out := filepath.Join(tmpDir, fmt.Sprintf("oci_%d.bundle.json", i+1))
-					if err := store.PullOCI(ref, out); err != nil {
+					if err := ociPullFunc(ref, out); err != nil {
 						return err
 					}
 				}
@@ -340,7 +342,7 @@ func newGateCommand() *cobra.Command {
 				}
 				for i, ref := range refs {
 					out := filepath.Join(tmpDir, fmt.Sprintf("oci_%d.bundle.json", i+1))
-					if err := store.PullOCI(ref, out); err != nil {
+					if err := ociPullFunc(ref, out); err != nil {
 						return err
 					}
 				}
