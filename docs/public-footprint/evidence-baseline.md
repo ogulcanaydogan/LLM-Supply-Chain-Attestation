@@ -14,8 +14,8 @@ As of **2026-02-18 (UTC)**, this is the public evidence baseline for `llmsa`.
 | Release verification signal | manual verification success (latest), one earlier failed run visible | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/workflows/release-verify.yml |
 | Security/tamper benchmark harness | present in repo (`scripts/tamper-tests.sh`, `scripts/benchmark.sh`) | `/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/scripts/` |
 | Coverage snapshot (local) | `55.5%` statement coverage from `coverage.out` | `/Users/ogulcanaydogan/Desktop/Projects/YaPAY/ LLM Supply-Chain Attestation/coverage.out` |
-| Upstream external PRs | `2` opened on 2026-02-18 | https://github.com/sigstore/cosign/pull/4710 ; https://github.com/open-policy-agent/opa/pull/8343 |
-| Third-party mentions | none linked yet | `docs/public-footprint/third-party-mention-plan.md` |
+| Upstream external PRs | `3` opened on 2026-02-18 | https://github.com/sigstore/cosign/pull/4710 ; https://github.com/open-policy-agent/opa/pull/8343 ; https://github.com/ossf/scorecard/pull/4942 |
+| Third-party mentions | `1` external technical write-up published | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous pilot case study | published (repo-hosted) | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 
 ## Core Gap Statement

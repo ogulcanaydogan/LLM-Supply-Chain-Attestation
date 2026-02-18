@@ -8,6 +8,7 @@ Track only contributions to repositories outside this project.
 |---|---|---|---|---|---|
 | 2026-02-18 | Sigstore / cosign | https://github.com/sigstore/cosign/pull/4710 | Docs contribution | opened | Added keyless `verify-blob` identity/issuer-constrained verification example with explicit failure-mode note. |
 | 2026-02-18 | Open Policy Agent / OPA | https://github.com/open-policy-agent/opa/pull/8343 | Docs contribution | opened | Added CI/CD guardrail pattern using stable input contract + deny-reasons policy output and `--fail-defined` pipeline behavior. |
+| 2026-02-18 | OpenSSF / Scorecard | https://github.com/ossf/scorecard/pull/4942 | Docs contribution | opened | Added beginner-focused release evidence progression connecting SBOM and Signed-Releases checks. |
 
 ## Status Definitions
 

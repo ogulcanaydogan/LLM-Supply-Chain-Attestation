@@ -16,16 +16,17 @@
 | Tamper test suite executed (20 cases) | Benchmark/Security | 2026-02-18 | repository artifact path: `.llmsa/tamper/results.md` |
 | Upstream contribution opened (Sigstore) | External PR | 2026-02-18 | https://github.com/sigstore/cosign/pull/4710 |
 | Upstream contribution opened (OPA) | External PR | 2026-02-18 | https://github.com/open-policy-agent/opa/pull/8343 |
+| Upstream contribution opened (OpenSSF Scorecard) | External PR | 2026-02-18 | https://github.com/ossf/scorecard/pull/4942 |
 | Anonymous pilot case study published | Adoption | 2026-02-18 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
-| Third-party technical mention published | Mention | pending | see draft: `docs/public-footprint/third-party-mention-draft-2026-02.md` |
+| Third-party technical mention published | Mention | 2026-02-18 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 
 ## Metrics Snapshot
 
 | Metric | Value | Source |
 |---|---:|---|
-| Upstream PRs opened | 2 | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs opened | 3 | `docs/public-footprint/external-contribution-log.md` |
 | Upstream PRs merged | 0 | `docs/public-footprint/external-contribution-log.md` |
-| Third-party mentions | 0 (draft ready) | `docs/public-footprint/third-party-mention-draft-2026-02.md` |
+| Third-party mentions | 1 | gist URL above |
 | Anonymous case studies | 1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
 | Release downloads (cumulative) | 184 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
@@ -45,7 +46,6 @@
 3. Environment notes:
    - GitHub Actions + local benchmark harness outputs.
 4. Limitations:
-   - third-party mention is prepared but not yet externally published.
    - merged-status external validation is pending maintainer review on opened PRs.
 
 ## Non-Claims Statement

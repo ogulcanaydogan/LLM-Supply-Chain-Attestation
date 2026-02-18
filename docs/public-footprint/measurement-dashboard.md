@@ -7,9 +7,9 @@ Day-0 values are captured on **2026-02-18 UTC**.
 
 | Metric | Day 0 | Day 30 Target | Current Delta |
 |---|---:|---:|---:|
-| Upstream PRs opened | 0 | >=2 | +2 |
+| Upstream PRs opened | 0 | >=2 | +3 |
 | Upstream PRs merged | 0 | >=1 | 0 |
-| Third-party mentions | 0 | >=1 | 0 |
+| Third-party mentions | 0 | >=1 | +1 |
 | Anonymous pilot case studies | 0 | >=1 | +1 |
 | GitHub stars | 0 | >=25 | 0 |
 | GitHub forks | 0 | >=5 | 0 |
@@ -36,3 +36,4 @@ Then copy metrics from the latest output into this table.
 - Snapshot artifact (local): `.llmsa/public-footprint/20260218T205404Z/snapshot.md`
 - Workflow run (public artifact): https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22157220499
 - CI pass rate source window: 17/19 successful runs (`89.47%`).
+- External write-up URL: https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
