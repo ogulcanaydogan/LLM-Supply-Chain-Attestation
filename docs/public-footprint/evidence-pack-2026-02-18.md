@@ -5,7 +5,7 @@
 - Name: `LLM-Supply-Chain-Attestation (llmsa)`
 - Repository: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation
 - Reporting window: 2026-02-18 to 2026-03-19 (UTC, rolling 30-day execution window)
-- Generated at (UTC): `2026-02-19T18:12:38Z`
+- Generated at (UTC): `2026-02-19T20:35:48Z`
 
 ## Evidence Summary
 
@@ -14,8 +14,8 @@
 | Release shipped with signed artifacts | Release | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/releases/tag/v1.0.1 |
 | Release workflow completed successfully | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
 | Release verification completed successfully | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189499214 |
-| CI attestation gate enforced and passing | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22190480116 |
-| Public-footprint snapshot workflow executed | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189686718 |
+| CI attestation gate enforced and passing | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22198995581 |
+| Public-footprint snapshot workflow executed | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22198998266 |
 | Tamper test suite executed (20 cases) | Benchmark/Security | 2026-02-19 | repository artifact path: `.llmsa/tamper/results.json` |
 | Upstream contribution closed (unmerged) | External PR | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8343 |
 | Upstream contribution closed (unmerged) | External PR | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8346 |
@@ -36,7 +36,7 @@
 | Anonymous case studies | 1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260219T181224Z/snapshot.json` |
 | Release downloads (cumulative) | 282 | `.llmsa/public-footprint/20260219T181224Z/snapshot.json` |
-| CI pass rate (last 30 days) | 83.72% (36/43) | `.llmsa/public-footprint/20260219T181231Z/ci-health.json` |
+| CI pass rate (last 30 days) | 84.44% (38/45) | `.llmsa/public-footprint/20260219T203544Z/ci-health.json` |
 | Tamper detection success rate | 100.00% (20/20) | `.llmsa/tamper/results.json` |
 | Verify p95 (100 statements) | 304.0 ms | `.llmsa/benchmarks/20260219T070954Z/summary.md` |
 
@@ -47,7 +47,7 @@
 | https://github.com/open-policy-agent/opa/pull/8343 | closed | false | n/a | 2026-02-19T16:27:58Z |
 | https://github.com/open-policy-agent/opa/pull/8346 | closed | false | n/a | 2026-02-19T16:32:37Z |
 | https://github.com/ossf/scorecard/pull/4942 | open | false | n/a | 2026-02-19T15:21:19Z |
-| https://github.com/sigstore/cosign/pull/4710 | open | false | n/a | 2026-02-19T15:21:19Z |
+| https://github.com/sigstore/cosign/pull/4710 | open | false | n/a | 2026-02-19T19:44:48Z |
 
 ## Reproducibility Notes
 
