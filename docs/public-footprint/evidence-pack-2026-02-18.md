@@ -5,18 +5,23 @@
 - Name: `LLM-Supply-Chain-Attestation (llmsa)`
 - Repository: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation
 - Reporting window: 2026-02-18 to 2026-03-19 (UTC, rolling 30-day execution window)
+- Last evidence refresh: **2026-02-19 UTC**
 
 ## Evidence Summary
 
 | Claim | Evidence Type | Date (UTC) | Public URL |
 |---|---|---|---|
 | Release shipped with signed artifacts | Release | 2026-02-18 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/releases/tag/v1.0.0 |
-| CI attestation gate enforced and passing | Workflow | 2026-02-18 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22149416407 |
-| Public-footprint snapshot workflow executed | Workflow | 2026-02-18 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22157220499 |
-| Tamper test suite executed (20 cases) | Benchmark/Security | 2026-02-18 | repository artifact path: `.llmsa/tamper/results.md` |
+| CI attestation gate enforced | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/workflows/ci-attest-verify.yml |
+| Public-footprint weekly workflow active | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/workflows/public-footprint-weekly.yml |
+| Upstream follow-up cadence workflow active (48h) | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/workflows/upstream-pr-followup.yml |
+| Tamper test suite executed (20 cases) | Benchmark/Security | 2026-02-19 | repository artifact path: `.llmsa/tamper/results.md` |
 | Upstream contribution opened (Sigstore) | External PR | 2026-02-18 | https://github.com/sigstore/cosign/pull/4710 |
 | Upstream contribution opened (OPA) | External PR | 2026-02-18 | https://github.com/open-policy-agent/opa/pull/8343 |
 | Upstream contribution opened (OpenSSF Scorecard) | External PR | 2026-02-18 | https://github.com/ossf/scorecard/pull/4942 |
+| Maintainer follow-up posted (Sigstore) | External PR Comment | 2026-02-19 | https://github.com/sigstore/cosign/pull/4710#issuecomment-3927950828 |
+| Maintainer follow-up posted (OPA) | External PR Comment | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8343#issuecomment-3927950855 |
+| Maintainer follow-up posted (Scorecard) | External PR Comment | 2026-02-19 | https://github.com/ossf/scorecard/pull/4942#issuecomment-3927950830 |
 | Anonymous pilot case study published | Adoption | 2026-02-18 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Third-party technical mention published | Mention | 2026-02-18 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 
@@ -25,14 +30,15 @@
 | Metric | Value | Source |
 |---|---:|---|
 | Upstream PRs opened | 3 | `docs/public-footprint/external-contribution-log.md` |
-| Upstream PRs merged | 0 | `docs/public-footprint/external-contribution-log.md` |
-| Third-party mentions | 1 | gist URL above |
+| Upstream PRs merged | 0 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942 |
+| Upstream PRs in review | 3 | `docs/public-footprint/external-contribution-log.md` |
+| Third-party mentions | 1 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous case studies | 1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
 | Release downloads (cumulative) | 184 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
-| CI pass rate (last 30 days) | 89.47% (17/19) | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
+| CI pass rate (last 30 days) | 89.47% (17/19) | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22172837380 |
 | Tamper detection success rate | 100% (20/20) | `.llmsa/tamper/results.md` |
-| Verify p95 (100 statements) | 27 ms | `.llmsa/benchmarks/20260218T165828Z/summary.md` |
+| Verify p95 (100 statements) | 304 ms | `.llmsa/benchmarks/20260219T070954Z/summary.md` |
 
 ## Reproducibility Notes
 
@@ -41,12 +47,13 @@
    - `./scripts/benchmark.sh`
    - `./scripts/tamper-tests.sh`
    - `./scripts/public-footprint-snapshot.sh`
-2. `llmsa` commit for footprint toolkit:
-   - `d3b5248`
-3. Environment notes:
-   - GitHub Actions + local benchmark harness outputs.
-4. Limitations:
-   - merged-status external validation is pending maintainer approval on three in-review PRs.
+   - `./scripts/ci-health-snapshot.sh`
+   - `./scripts/generate-evidence-pack.sh`
+2. Current limitations:
+   - external merged PR evidence is still pending maintainer approval.
+   - current mention is hosted on Gist; canonical non-GitHub publication is still pending.
+3. Reliability hardening in progress:
+   - OCI verification and release-asset download steps now include retries and preflight checks in workflow YAML.
 
 ## Non-Claims Statement
 

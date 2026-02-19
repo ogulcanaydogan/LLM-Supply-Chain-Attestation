@@ -10,10 +10,15 @@ permissions:
   id-token: write
   packages: write
 
+concurrency:
+  group: ci-attest-verify-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   attestation-gate:
     name: attestation-gate
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,8 +42,19 @@ jobs:
       - name: Init
         run: go run ./cmd/llmsa init
 
+      - name: Preflight checks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          test -f policy/examples/mvp-gates.yaml
+          test -d examples/tiny-rag/configs
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            test -n "${GITHUB_TOKEN}"
+          fi
+
       - name: Create attestations
         run: |
+          rm -rf .llmsa/attestations
           mkdir -p .llmsa/attestations
           go run ./cmd/llmsa attest create --type prompt_attestation --config examples/tiny-rag/configs/prompt.yaml --out .llmsa/attestations
           go run ./cmd/llmsa attest create --type corpus_attestation --config examples/tiny-rag/configs/corpus.yaml --out .llmsa/attestations
@@ -69,20 +85,45 @@ jobs:
           for b in .llmsa/attestations/*.bundle.json; do
             n=$((n+1))
             ref="ghcr.io/${REPO_LOWER}/attestations:${GITHUB_SHA}-b${n}"
-            pinned="$(go run ./cmd/llmsa publish --in "$b" --oci "$ref" | tail -n1)"
+            pinned=""
+            for attempt in 1 2 3; do
+              if pinned="$(go run ./cmd/llmsa publish --in "$b" --oci "$ref" | tail -n1)"; then
+                break
+              fi
+              sleep $((attempt * 5))
+            done
+            if [[ -z "${pinned}" ]]; then
+              echo "failed to publish ${b} after retries"
+              exit 1
+            fi
             echo "$pinned" >> oci-refs.txt
           done
+          wc -l oci-refs.txt
 
       - name: Verify from OCI
         if: github.event_name == 'push'
         run: |
           OCI_REFS="$(paste -sd, oci-refs.txt)"
-          go run ./cmd/llmsa verify \
-            --source oci \
-            --attestations "$OCI_REFS" \
-            --policy policy/examples/mvp-gates.yaml \
-            --format json \
-            --out verify-oci.json
+          ok=0
+          for attempt in 1 2 3; do
+            if go run ./cmd/llmsa verify \
+              --source oci \
+              --attestations "$OCI_REFS" \
+              --policy policy/examples/mvp-gates.yaml \
+              --format json \
+              --out verify-oci.json; then
+              ok=1
+              break
+            fi
+            sleep $((attempt * 10))
+          done
+          if [[ "${ok}" != "1" ]]; then
+            echo "OCI verification failed after retries"
+            if [[ -f verify-oci.json ]]; then
+              cat verify-oci.json
+            fi
+            exit 1
+          fi
 
       - name: Gate from OCI
         if: github.event_name == 'push'

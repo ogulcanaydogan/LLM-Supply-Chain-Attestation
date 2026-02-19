@@ -1,0 +1,30 @@
+name: upstream-pr-followup
+
+on:
+  schedule:
+    - cron: "0 3 */2 * *"
+  workflow_dispatch:
+
+jobs:
+  followup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate upstream follow-up snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x scripts/upstream-pr-followup.sh
+          ./scripts/upstream-pr-followup.sh
+
+      - name: Upload follow-up artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-pr-followup
+          path: .llmsa/public-footprint/**

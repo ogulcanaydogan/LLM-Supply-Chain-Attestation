@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   verify-release-assets:
@@ -22,6 +23,7 @@ jobs:
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Resolve tag
         id: resolve
@@ -52,10 +54,25 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo "GH_TOKEN is required"
+            exit 1
+          fi
           mkdir -p release-assets
-          gh release download "${{ steps.resolve.outputs.tag }}" \
-            -R "${GITHUB_REPOSITORY}" \
-            -D release-assets
+          ok=0
+          for attempt in 1 2 3; do
+            if gh release download "${{ steps.resolve.outputs.tag }}" \
+              -R "${GITHUB_REPOSITORY}" \
+              -D release-assets; then
+              ok=1
+              break
+            fi
+            sleep $((attempt * 5))
+          done
+          if [[ "${ok}" != "1" ]]; then
+            echo "failed to download release assets after retries"
+            exit 1
+          fi
           ls -la release-assets
 
       - name: Verify checksums

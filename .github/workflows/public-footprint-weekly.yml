@@ -8,6 +8,7 @@ on:
 jobs:
   snapshot:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       actions: read
@@ -23,8 +24,30 @@ jobs:
           chmod +x scripts/public-footprint-snapshot.sh
           ./scripts/public-footprint-snapshot.sh "${GITHUB_REPOSITORY}"
 
+      - name: Run CI health snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x scripts/ci-health-snapshot.sh
+          ./scripts/ci-health-snapshot.sh "${GITHUB_REPOSITORY}"
+
+      - name: Generate measurement dashboard and evidence pack
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x scripts/generate-evidence-pack.sh
+          ./scripts/generate-evidence-pack.sh "${GITHUB_REPOSITORY}"
+
       - name: Upload snapshot artifacts
         uses: actions/upload-artifact@v4
         with:
           name: public-footprint-snapshot
           path: .llmsa/public-footprint/**
+
+      - name: Upload public-footprint docs
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-footprint-docs
+          path: |
+            docs/public-footprint/measurement-dashboard.md
+            docs/public-footprint/evidence-pack-2026-02-18.md

@@ -36,8 +36,10 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
 
 - Publish-ready article draft completed:
   - `docs/public-footprint/third-party-mention-draft-2026-02.md`
-- External technical write-up published:
+- External technical write-up currently published as interim mirror:
   - https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
+- Canonical third-party publication target (primary evidence link) is pending:
+  - Dev.to / Medium / newsletter publication URL to be inserted after posting.
 - Evidence pack prepared for post-publication URL insertion:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
 

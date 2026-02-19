@@ -34,6 +34,9 @@ REPO_JSON="${OUT_DIR}/repo.json"
 RELEASES_JSON="${OUT_DIR}/releases.json"
 RUNS_JSON="${OUT_DIR}/runs.json"
 PRS_JSON="${OUT_DIR}/prs.json"
+COSIGN_PR_JSON="${OUT_DIR}/upstream-cosign-pr.json"
+OPA_PR_JSON="${OUT_DIR}/upstream-opa-pr.json"
+SCORECARD_PR_JSON="${OUT_DIR}/upstream-scorecard-pr.json"
 SNAPSHOT_JSON="${OUT_DIR}/snapshot.json"
 SNAPSHOT_MD="${OUT_DIR}/snapshot.md"
 
@@ -41,13 +44,26 @@ gh repo view "${REPO}" --json nameWithOwner,url,stargazerCount,forkCount,watcher
 gh api "repos/${REPO}/releases?per_page=100" > "${RELEASES_JSON}"
 gh run list --repo "${REPO}" --limit 200 --json conclusion,createdAt,name,url > "${RUNS_JSON}"
 gh pr list --repo "${REPO}" --state all --limit 200 --json createdAt,mergedAt,state,url > "${PRS_JSON}"
+gh api repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
+gh api repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
+gh api repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
 
-python3 - "${REPO_JSON}" "${RELEASES_JSON}" "${RUNS_JSON}" "${PRS_JSON}" "${SNAPSHOT_JSON}" "${SNAPSHOT_MD}" <<'PY'
+python3 - "${REPO_JSON}" "${RELEASES_JSON}" "${RUNS_JSON}" "${PRS_JSON}" "${COSIGN_PR_JSON}" "${OPA_PR_JSON}" "${SCORECARD_PR_JSON}" "${SNAPSHOT_JSON}" "${SNAPSHOT_MD}" <<'PY'
 import json
 import sys
 from datetime import datetime, timedelta, timezone
 
-repo_file, releases_file, runs_file, prs_file, out_json, out_md = sys.argv[1:7]
+(
+    repo_file,
+    releases_file,
+    runs_file,
+    prs_file,
+    cosign_pr_file,
+    opa_pr_file,
+    scorecard_pr_file,
+    out_json,
+    out_md,
+) = sys.argv[1:10]
 
 def parse_time(value):
     try:
@@ -62,6 +78,11 @@ repo = json.load(open(repo_file, "r", encoding="utf-8"))
 releases = json.load(open(releases_file, "r", encoding="utf-8"))
 runs = json.load(open(runs_file, "r", encoding="utf-8"))
 prs = json.load(open(prs_file, "r", encoding="utf-8"))
+upstream_prs = [
+    json.load(open(cosign_pr_file, "r", encoding="utf-8")),
+    json.load(open(opa_pr_file, "r", encoding="utf-8")),
+    json.load(open(scorecard_pr_file, "r", encoding="utf-8")),
+]
 
 downloads_total = 0
 for release in releases:
@@ -87,6 +108,14 @@ for pr in prs:
 opened_prs_30d = len(prs_30d)
 merged_prs_30d = sum(1 for pr in prs_30d if pr.get("mergedAt"))
 
+upstream_pr_open = sum(1 for pr in upstream_prs if pr.get("state") == "open")
+upstream_pr_merged = sum(1 for pr in upstream_prs if pr.get("merged"))
+upstream_pr_in_review = sum(
+    1
+    for pr in upstream_prs
+    if pr.get("state") == "open" and not pr.get("draft") and not pr.get("merged")
+)
+
 snapshot = {
     "generated_at_utc": now.isoformat(),
     "window_days": 30,
@@ -103,6 +132,9 @@ snapshot = {
     "ci_pass_rate_30d_percent": pass_rate_30d,
     "prs_opened_30d": opened_prs_30d,
     "prs_merged_30d": merged_prs_30d,
+    "upstream_pr_open": upstream_pr_open,
+    "upstream_pr_merged": upstream_pr_merged,
+    "in_review_count": upstream_pr_in_review,
 }
 
 with open(out_json, "w", encoding="utf-8") as f:
@@ -127,6 +159,9 @@ lines = [
     f"| CI pass rate (last 30 days) | {snapshot['ci_pass_rate_30d_percent']}% |",
     f"| PRs opened (last 30 days) | {snapshot['prs_opened_30d']} |",
     f"| PRs merged (last 30 days) | {snapshot['prs_merged_30d']} |",
+    f"| Upstream PRs open | {snapshot['upstream_pr_open']} |",
+    f"| Upstream PRs merged | {snapshot['upstream_pr_merged']} |",
+    f"| Upstream PRs in review | {snapshot['in_review_count']} |",
 ]
 
 with open(out_md, "w", encoding="utf-8") as f:
