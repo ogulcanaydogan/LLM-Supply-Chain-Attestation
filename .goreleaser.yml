@@ -23,11 +23,11 @@ builds:
       - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
 
 archives:
-  - format: tar.gz
+  - formats: [tar.gz]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats: [zip]
 
 checksum:
   name_template: "checksums.txt"
@@ -40,28 +40,10 @@ changelog:
       - "^style:"
       - "^Merge"
 
-dockers:
-  - image_templates:
-      - "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}-amd64"
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/amd64"
+dockers_v2:
+  - images:
+      - "ghcr.io/ogulcanaydogan/llmsa"
+    tags:
+      - "{{ .Version }}"
+      - "latest"
     dockerfile: Dockerfile
-    goarch: amd64
-  - image_templates:
-      - "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}-arm64"
-    use: buildx
-    build_flag_templates:
-      - "--platform=linux/arm64"
-    dockerfile: Dockerfile
-    goarch: arm64
-
-docker_manifests:
-  - name_template: "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}"
-    image_templates:
-      - "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}-amd64"
-      - "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}-arm64"
-  - name_template: "ghcr.io/ogulcanaydogan/llmsa:latest"
-    image_templates:
-      - "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}-amd64"
-      - "ghcr.io/ogulcanaydogan/llmsa:{{ .Version }}-arm64"

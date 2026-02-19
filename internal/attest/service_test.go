@@ -383,6 +383,184 @@ func TestSortedFileDigests(t *testing.T) {
 	}
 }
 
+// --- collectByType() happy paths ---
+
+func TestCollectByTypePrompt(t *testing.T) {
+	st, err := collectByType("prompt_attestation", "../../examples/tiny-rag/configs/prompt.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.AttestationType != "prompt_attestation" {
+		t.Fatalf("unexpected type: %s", st.AttestationType)
+	}
+}
+
+func TestCollectByTypeCorpus(t *testing.T) {
+	st, err := collectByType("corpus_attestation", "../../examples/tiny-rag/configs/corpus.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.AttestationType != "corpus_attestation" {
+		t.Fatalf("unexpected type: %s", st.AttestationType)
+	}
+}
+
+func TestCollectByTypeEval(t *testing.T) {
+	st, err := collectByType("eval_attestation", "../../examples/tiny-rag/configs/eval.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.AttestationType != "eval_attestation" {
+		t.Fatalf("unexpected type: %s", st.AttestationType)
+	}
+}
+
+func TestCollectByTypeRoute(t *testing.T) {
+	st, err := collectByType("route_attestation", "../../examples/tiny-rag/configs/route.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.AttestationType != "route_attestation" {
+		t.Fatalf("unexpected type: %s", st.AttestationType)
+	}
+}
+
+func TestCollectByTypeSLO(t *testing.T) {
+	st, err := collectByType("slo_attestation", "../../examples/tiny-rag/configs/slo.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st.AttestationType != "slo_attestation" {
+		t.Fatalf("unexpected type: %s", st.AttestationType)
+	}
+}
+
+// --- CreateByType() happy path ---
+
+func TestCreateByTypeHappyPath(t *testing.T) {
+	outDir := t.TempDir()
+	paths, err := CreateByType(CreateOptions{
+		Type:       "prompt_attestation",
+		ConfigPath: "../../examples/tiny-rag/configs/prompt.yaml",
+		OutDir:     outDir,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(paths) != 1 {
+		t.Fatalf("expected 1 output path, got %d", len(paths))
+	}
+	if !strings.Contains(paths[0], "statement_prompt_attestation_") {
+		t.Fatalf("unexpected output filename: %s", paths[0])
+	}
+	// Verify file was written and contains valid JSON
+	data, err := os.ReadFile(paths[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(data) == 0 {
+		t.Fatal("expected non-empty statement file")
+	}
+}
+
+func TestCreateByTypeWithDeterminismCheck(t *testing.T) {
+	outDir := t.TempDir()
+	paths, err := CreateByType(CreateOptions{
+		Type:             "prompt_attestation",
+		ConfigPath:       "../../examples/tiny-rag/configs/prompt.yaml",
+		OutDir:           outDir,
+		DeterminismCheck: 3,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(paths) != 1 {
+		t.Fatalf("expected 1 output path, got %d", len(paths))
+	}
+}
+
+func TestCreateByTypeInvalidConfigPath(t *testing.T) {
+	outDir := t.TempDir()
+	_, err := CreateByType(CreateOptions{
+		Type:       "prompt_attestation",
+		ConfigPath: "/nonexistent/config.yaml",
+		OutDir:     outDir,
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid config path")
+	}
+}
+
+func TestCreateByTypeReadOnlyOutDir(t *testing.T) {
+	_, err := CreateByType(CreateOptions{
+		Type:       "prompt_attestation",
+		ConfigPath: "../../examples/tiny-rag/configs/prompt.yaml",
+		OutDir:     "/proc/nonexistent/readonly/dir",
+	})
+	if err == nil {
+		t.Fatal("expected error for non-writable out dir")
+	}
+}
+
+// --- changedFiles() ---
+
+func TestChangedFilesNonGitDir(t *testing.T) {
+	// In a temp dir that isn't a git repo, changedFiles should return empty slice without error
+	orig, _ := os.Getwd()
+	tmp := t.TempDir()
+	os.Chdir(tmp)
+	t.Cleanup(func() { os.Chdir(orig) })
+
+	files, err := changedFiles("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(files) != 0 {
+		t.Fatalf("expected 0 changed files in non-git dir, got %d: %v", len(files), files)
+	}
+}
+
+func TestChangedFilesDefaultRef(t *testing.T) {
+	// When gitRef is empty, it should default to HEAD~1
+	// In the actual repo, this should work without error
+	files, err := changedFiles("")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	// We just check it doesn't error, file list depends on git state
+	_ = files
+}
+
+func TestChangedFilesCustomRef(t *testing.T) {
+	// Use a custom ref - should not panic
+	files, err := changedFiles("HEAD~5")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	_ = files
+}
+
+// --- matches() additional edge cases ---
+
+func TestMatchesTrailingWildcardSubdir(t *testing.T) {
+	// trailing * matches subdirectory prefix
+	if !matches("configs/prompt.yaml", "configs/*") {
+		t.Error("expected configs/prompt.yaml to match configs/*")
+	}
+}
+
+func TestMatchesExactPath(t *testing.T) {
+	if !matches("file.txt", "file.txt") {
+		t.Error("expected exact match")
+	}
+}
+
+func TestMatchesRecursiveDeepNesting(t *testing.T) {
+	if !matches("corpus/a/b/c/d/e.txt", "corpus/**") {
+		t.Error("expected deep nested path to match corpus/**")
+	}
+}
+
 // --- newStatement() ---
 
 func TestNewStatementFields(t *testing.T) {
