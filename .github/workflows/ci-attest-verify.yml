@@ -12,7 +12,7 @@ permissions:
   packages: write
 
 concurrency:
-  group: ci-attest-verify-${{ github.ref }}
+  group: ci-attest-verify-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:

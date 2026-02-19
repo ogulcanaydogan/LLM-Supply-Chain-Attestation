@@ -141,7 +141,7 @@ mapfile -t FAILED_IDS < <(
   jq -r '
     .[]
     | select(.status == "completed")
-    | select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral")
+    | select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral" and .conclusion != "cancelled")
     | .databaseId
   ' "${ALL_RUNS_JSON}" | sort -u
 )
@@ -198,7 +198,7 @@ jq -n \
     else ((($ok * 10000.0) / $total) | round / 100)
     end;
   ($runs[0] // []) as $all_runs
-  | ($all_runs | map(select(.status == "completed"))) as $completed_runs
+  | ($all_runs | map(select(.status == "completed" and .conclusion != "cancelled"))) as $completed_runs
   | ($completed_runs | length) as $completed_total
   | ($completed_runs | map(select(.conclusion == "success")) | length) as $success_total
   | ($completed_total - $success_total) as $failure_total
@@ -208,6 +208,10 @@ jq -n \
       repo: $repo,
       window_days: $window_days,
       window_start_utc: ($since_date + "T00:00:00Z"),
+      methodology: {
+        include_status: "completed",
+        exclude_conclusions: ["cancelled"]
+      },
       sources: {
         gh_runs_api: "gh api repos/<owner>/<repo>/actions/runs?per_page=100",
         gh_run_jobs_api: "gh api repos/<owner>/<repo>/actions/runs/<run_id>/jobs?per_page=100"
@@ -248,6 +252,7 @@ jq -n \
   echo "- Generated (UTC): \`${GENERATED_AT}\`"
   echo "- Repository: \`${REPO}\`"
   echo "- Window: last \`${WINDOW_DAYS}\` days (from \`${SINCE_DATE}\`)"
+  echo "- Method: completed runs only; \`cancelled\` conclusions are excluded."
   echo
   echo "## Totals"
   echo

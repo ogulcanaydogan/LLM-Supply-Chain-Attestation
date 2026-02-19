@@ -13,20 +13,20 @@ Day-0 values are captured on **2026-02-18 UTC**.
 | Upstream PRs closed (unmerged) | 0 | <=1 | +2 | https://github.com/open-policy-agent/opa/pull/8343, https://github.com/open-policy-agent/opa/pull/8346, https://github.com/ossf/scorecard/pull/4942, https://github.com/sigstore/cosign/pull/4710 |
 | Third-party mentions | 0 | >=1 | +1 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous pilot case studies | 0 | >=1 | +1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
-| GitHub stars | 0 | >=25 | 0 | `.llmsa/public-footprint/20260219T181224Z/snapshot.json` |
-| GitHub forks | 0 | >=5 | 0 | `.llmsa/public-footprint/20260219T181224Z/snapshot.json` |
-| GitHub watchers | 0 | >=5 | 0 | `.llmsa/public-footprint/20260219T181224Z/snapshot.json` |
-| Release downloads (cumulative) | 184 | >=400 | 98 | `.llmsa/public-footprint/20260219T181224Z/snapshot.json` |
-| CI pass rate (last 30 days) | 93.3% | >=95% | 84.44% | `.llmsa/public-footprint/20260219T203544Z/ci-health.json` |
+| GitHub stars | 0 | >=25 | 0 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
+| GitHub forks | 0 | >=5 | 0 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
+| GitHub watchers | 0 | >=5 | 0 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
+| Release downloads (cumulative) | 184 | >=400 | 98 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
+| CI pass rate (last 30 days) | 93.3% | >=95% | 85.11% | `.llmsa/public-footprint/20260219T210825Z/ci-health.json` |
 
 ## Current Snapshot (2026-02-19 UTC)
 
-- Snapshot artifact (local): `.llmsa/public-footprint/20260219T181224Z/snapshot.json`
-- CI health artifact (local): `.llmsa/public-footprint/20260219T203544Z/ci-health.json`
-- CI pass rate source window: 38/45 successful runs (`84.44%`).
+- Snapshot artifact (local): `.llmsa/public-footprint/20260219T210819Z/snapshot.json`
+- CI health artifact (local): `.llmsa/public-footprint/20260219T210825Z/ci-health.json`
+- CI pass rate source window: 40/47 successful runs (`85.11%`).
 - External write-up URL: https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
 - Upstream PR review stage:
   - `in-review`: 2
   - `closed`: 2
   - `merged`: 0
-- Dashboard generated at: `2026-02-19T20:35:48Z`
+- Dashboard generated at: `2026-02-19T21:08:31Z`
