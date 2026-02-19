@@ -118,7 +118,7 @@ jq \
     [
       .workflow_runs[]
       | select(.created_at >= $since)
-      | select(($workflows | index(.name)) != null)
+      | select(.name as $name | ($workflows | index($name)) != null)
       | {
           databaseId: .id,
           name: .name,
