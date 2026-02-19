@@ -22,13 +22,23 @@ iso_epoch() {
   date -u -j -f "%Y-%m-%dT%H:%M:%S%z" "${normalized}" +%s
 }
 
+gh_api_retry() {
+  local attempt
+  for attempt in 1 2 3; do
+    if gh api "$@"; then
+      return 0
+    fi
+    sleep $((attempt * 2))
+  done
+  return 1
+}
+
 require_cmd gh
 require_cmd jq
 
 if ! gh auth status >/dev/null 2>&1; then
   if [[ -z "${GH_TOKEN:-}" && -z "${GITHUB_TOKEN:-}" ]]; then
-    echo "error: gh is not authenticated. run: gh auth login" >&2
-    exit 1
+    echo "warning: gh is not authenticated; using anonymous API access (rate-limited)." >&2
   fi
 fi
 
@@ -54,7 +64,7 @@ trap 'rm -f "${TMP_NDJSON}"' EXIT
 for entry in "${PRS[@]}"; do
   repo="${entry%%:*}"
   number="${entry##*:}"
-  pr_json="$(gh api "repos/${repo}/pulls/${number}")"
+  pr_json="$(gh_api_retry "repos/${repo}/pulls/${number}")"
   url="$(echo "${pr_json}" | jq -r '.html_url')"
   title="$(echo "${pr_json}" | jq -r '.title')"
   state="$(echo "${pr_json}" | jq -r '.state')"

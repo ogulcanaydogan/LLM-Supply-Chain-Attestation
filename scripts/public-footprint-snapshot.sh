@@ -14,16 +14,52 @@ if ! command -v python3 >/dev/null 2>&1; then
   exit 1
 fi
 
+repo_from_git_remote() {
+  local remote
+  remote="$(git config --get remote.origin.url 2>/dev/null || true)"
+  case "${remote}" in
+    git@github.com:*)
+      echo "${remote#git@github.com:}" | sed 's/\.git$//'
+      ;;
+    https://github.com/*)
+      echo "${remote#https://github.com/}" | sed 's/\.git$//'
+      ;;
+    http://github.com/*)
+      echo "${remote#http://github.com/}" | sed 's/\.git$//'
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+gh_api_retry() {
+  local attempt
+  for attempt in 1 2 3; do
+    if gh api "$@"; then
+      return 0
+    fi
+    sleep $((attempt * 2))
+  done
+  return 1
+}
+
 if ! gh auth status >/dev/null 2>&1; then
   if [[ -z "${GH_TOKEN:-}" && -z "${GITHUB_TOKEN:-}" ]]; then
-    echo "error: gh is not authenticated. run: gh auth login" >&2
-    exit 1
+    echo "warning: gh is not authenticated; using anonymous API access (rate-limited)." >&2
   fi
 fi
 
 REPO="${1:-}"
 if [[ -z "${REPO}" ]]; then
-  REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+  REPO="$(repo_from_git_remote)"
+fi
+if [[ -z "${REPO}" ]]; then
+  REPO="$(gh api user/repos --jq '.[0].full_name' 2>/dev/null || true)"
+fi
+if [[ -z "${REPO}" || "${REPO}" == "null" ]]; then
+  echo "error: repository argument is required when gh repo context is unavailable" >&2
+  exit 1
 fi
 
 TS="$(date -u +"%Y%m%dT%H%M%SZ")"
@@ -40,13 +76,15 @@ SCORECARD_PR_JSON="${OUT_DIR}/upstream-scorecard-pr.json"
 SNAPSHOT_JSON="${OUT_DIR}/snapshot.json"
 SNAPSHOT_MD="${OUT_DIR}/snapshot.md"
 
-gh repo view "${REPO}" --json nameWithOwner,url,stargazerCount,forkCount,watchers,defaultBranchRef,updatedAt,createdAt > "${REPO_JSON}"
-gh api "repos/${REPO}/releases?per_page=100" > "${RELEASES_JSON}"
-gh run list --repo "${REPO}" --limit 200 --json conclusion,createdAt,name,url > "${RUNS_JSON}"
-gh pr list --repo "${REPO}" --state all --limit 200 --json createdAt,mergedAt,state,url > "${PRS_JSON}"
-gh api repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
-gh api repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
-gh api repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
+gh_api_retry "repos/${REPO}" > "${REPO_JSON}"
+gh_api_retry "repos/${REPO}/releases?per_page=100" > "${RELEASES_JSON}"
+gh_api_retry "repos/${REPO}/actions/runs?per_page=100" \
+  --jq '[.workflow_runs[] | {conclusion: .conclusion, createdAt: .created_at, name: .name, url: .html_url}]' > "${RUNS_JSON}"
+gh_api_retry "repos/${REPO}/pulls?state=all&per_page=100" \
+  --jq '[.[] | {createdAt: .created_at, mergedAt: .merged_at, state: .state, url: .html_url}]' > "${PRS_JSON}"
+gh_api_retry repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
+gh_api_retry repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
+gh_api_retry repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
 
 python3 - "${REPO_JSON}" "${RELEASES_JSON}" "${RUNS_JSON}" "${PRS_JSON}" "${COSIGN_PR_JSON}" "${OPA_PR_JSON}" "${SCORECARD_PR_JSON}" "${SNAPSHOT_JSON}" "${SNAPSHOT_MD}" <<'PY'
 import json
@@ -119,12 +157,12 @@ upstream_pr_in_review = sum(
 snapshot = {
     "generated_at_utc": now.isoformat(),
     "window_days": 30,
-    "repo": repo.get("nameWithOwner"),
-    "repo_url": repo.get("url"),
-    "stars": repo.get("stargazerCount", 0),
-    "forks": repo.get("forkCount", 0),
-    "watchers": repo.get("watchers", {}).get("totalCount", 0),
-    "default_branch": repo.get("defaultBranchRef", {}).get("name"),
+    "repo": repo.get("nameWithOwner") or repo.get("full_name"),
+    "repo_url": repo.get("url") or repo.get("html_url"),
+    "stars": repo.get("stargazerCount", repo.get("stargazers_count", 0)),
+    "forks": repo.get("forkCount", repo.get("forks_count", 0)),
+    "watchers": repo.get("watchers", {}).get("totalCount", repo.get("subscribers_count", repo.get("watchers_count", 0))),
+    "default_branch": repo.get("defaultBranchRef", {}).get("name", repo.get("default_branch")),
     "release_count": len(releases),
     "release_downloads_total": downloads_total,
     "ci_runs_30d_total": total_30d,

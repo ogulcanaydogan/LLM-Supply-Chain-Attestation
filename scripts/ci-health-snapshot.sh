@@ -37,19 +37,52 @@ classify_failure() {
   echo "deterministic_config_error"
 }
 
+repo_from_git_remote() {
+  local remote
+  remote="$(git config --get remote.origin.url 2>/dev/null || true)"
+  case "${remote}" in
+    git@github.com:*)
+      echo "${remote#git@github.com:}" | sed 's/\.git$//'
+      ;;
+    https://github.com/*)
+      echo "${remote#https://github.com/}" | sed 's/\.git$//'
+      ;;
+    http://github.com/*)
+      echo "${remote#http://github.com/}" | sed 's/\.git$//'
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+gh_api_retry() {
+  local attempt
+  for attempt in 1 2 3; do
+    if gh api "$@"; then
+      return 0
+    fi
+    sleep $((attempt * 2))
+  done
+  return 1
+}
+
 require_cmd gh
 require_cmd jq
 
 if ! gh auth status >/dev/null 2>&1; then
   if [[ -z "${GH_TOKEN:-}" && -z "${GITHUB_TOKEN:-}" ]]; then
-    echo "error: gh is not authenticated. run: gh auth login" >&2
-    exit 1
+    echo "warning: gh is not authenticated; using anonymous API access (rate-limited)." >&2
   fi
 fi
 
 REPO="${1:-}"
 if [[ -z "${REPO}" ]]; then
-  REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+  REPO="$(repo_from_git_remote)"
+fi
+if [[ -z "${REPO}" ]]; then
+  echo "error: repository argument is required when git remote cannot be resolved" >&2
+  exit 1
 fi
 
 WINDOW_DAYS="${WINDOW_DAYS:-30}"
@@ -71,21 +104,35 @@ else
   )
 fi
 
-RUN_FILES=()
-for workflow in "${WORKFLOWS[@]}"; do
-  safe_name="$(echo "${workflow}" | tr ' /' '__')"
-  out_file="${TMP_DIR}/runs-${safe_name}.json"
-  gh run list \
-    --repo "${REPO}" \
-    --workflow "${workflow}" \
-    --created ">=${SINCE_DATE}" \
-    --limit 200 \
-    --json databaseId,name,workflowName,conclusion,status,createdAt,updatedAt,url,event,headSha > "${out_file}"
-  RUN_FILES+=("${out_file}")
-done
-
 ALL_RUNS_JSON="${TMP_DIR}/all-runs.json"
-jq -s 'map(.[]?) | flatten' "${RUN_FILES[@]}" > "${ALL_RUNS_JSON}"
+ALL_RUNS_REST_JSON="${TMP_DIR}/all-runs-rest.json"
+gh_api_retry "repos/${REPO}/actions/runs?per_page=100" > "${ALL_RUNS_REST_JSON}"
+
+workflows_json="$(printf '%s\n' "${WORKFLOWS[@]}" | jq -R . | jq -s .)"
+since_ts="${SINCE_DATE}T00:00:00Z"
+
+jq \
+  --arg since "${since_ts}" \
+  --argjson workflows "${workflows_json}" \
+  '
+    [
+      .workflow_runs[]
+      | select(.created_at >= $since)
+      | select(($workflows | index(.name)) != null)
+      | {
+          databaseId: .id,
+          name: .name,
+          workflowName: .name,
+          conclusion: .conclusion,
+          status: .status,
+          createdAt: .created_at,
+          updatedAt: .updated_at,
+          url: .html_url,
+          event: .event,
+          headSha: .head_sha
+        }
+    ]
+  ' "${ALL_RUNS_REST_JSON}" > "${ALL_RUNS_JSON}"
 
 FAILURE_DETAILS_NDJSON="${TMP_DIR}/failure-details.ndjson"
 : > "${FAILURE_DETAILS_NDJSON}"
@@ -100,19 +147,21 @@ mapfile -t FAILED_IDS < <(
 )
 
 for run_id in "${FAILED_IDS[@]}"; do
-  detail_file="${TMP_DIR}/run-${run_id}.json"
-  gh run view "${run_id}" --repo "${REPO}" --json databaseId,name,workflowName,conclusion,status,url,createdAt,updatedAt,jobs > "${detail_file}" || continue
+  run_file="${TMP_DIR}/run-${run_id}.json"
+  jobs_file="${TMP_DIR}/run-${run_id}-jobs.json"
+  jq --argjson rid "${run_id}" '.[] | select(.databaseId == $rid)' "${ALL_RUNS_JSON}" > "${run_file}" || continue
+  gh_api_retry "repos/${REPO}/actions/runs/${run_id}/jobs?per_page=100" > "${jobs_file}" || continue
 
-  workflow_name="$(jq -r '.workflowName // .name // "unknown"' "${detail_file}")"
-  failed_steps="$(jq -r '[.jobs[]?.steps[]? | select(.conclusion == "failure") | .name] | unique | join("; ")' "${detail_file}")"
+  workflow_name="$(jq -r '.workflowName // .name // "unknown"' "${run_file}")"
+  failed_steps="$(jq -r '[.jobs[]?.steps[]? | select(.conclusion == "failure") | .name] | unique | join("; ")' "${jobs_file}")"
   classification="$(classify_failure "${workflow_name}" "${failed_steps}")"
 
   jq -cn \
     --argjson run_id "${run_id}" \
     --arg workflow "${workflow_name}" \
-    --arg conclusion "$(jq -r '.conclusion // ""' "${detail_file}")" \
-    --arg created_at "$(jq -r '.createdAt // ""' "${detail_file}")" \
-    --arg url "$(jq -r '.url // ""' "${detail_file}")" \
+    --arg conclusion "$(jq -r '.conclusion // ""' "${run_file}")" \
+    --arg created_at "$(jq -r '.createdAt // ""' "${run_file}")" \
+    --arg url "$(jq -r '.url // ""' "${run_file}")" \
     --arg failed_steps "${failed_steps}" \
     --arg classification "${classification}" \
     '{
@@ -135,8 +184,6 @@ fi
 
 CI_HEALTH_JSON="${OUT_DIR}/ci-health.json"
 CI_HEALTH_MD="${OUT_DIR}/ci-health.md"
-
-workflows_json="$(printf '%s\n' "${WORKFLOWS[@]}" | jq -R . | jq -s .)"
 
 jq -n \
   --arg generated_at "${GENERATED_AT}" \
@@ -162,8 +209,8 @@ jq -n \
       window_days: $window_days,
       window_start_utc: ($since_date + "T00:00:00Z"),
       sources: {
-        gh_run_list: "gh run list --workflow <workflow> --created >=<date> --json ...",
-        gh_run_view: "gh run view <run_id> --json jobs,..."
+        gh_runs_api: "gh api repos/<owner>/<repo>/actions/runs?per_page=100",
+        gh_run_jobs_api: "gh api repos/<owner>/<repo>/actions/runs/<run_id>/jobs?per_page=100"
       },
       totals: {
         completed_runs: $completed_total,
@@ -206,10 +253,10 @@ jq -n \
   echo
   echo "| Metric | Value | Source |"
   echo "|---|---:|---|"
-  echo "| Completed runs | $(jq -r '.totals.completed_runs' "${CI_HEALTH_JSON}") | \`gh run list --created >=${SINCE_DATE}\` |"
-  echo "| Successful runs | $(jq -r '.totals.successful_runs' "${CI_HEALTH_JSON}") | \`gh run list --created >=${SINCE_DATE}\` |"
-  echo "| Failed runs | $(jq -r '.totals.failed_runs' "${CI_HEALTH_JSON}") | \`gh run list --created >=${SINCE_DATE}\` |"
-  echo "| Pass rate | $(jq -r '.totals.pass_rate_percent' "${CI_HEALTH_JSON}")% | \`gh run list --created >=${SINCE_DATE}\` |"
+  echo "| Completed runs | $(jq -r '.totals.completed_runs' "${CI_HEALTH_JSON}") | \`gh api repos/${REPO}/actions/runs\` |"
+  echo "| Successful runs | $(jq -r '.totals.successful_runs' "${CI_HEALTH_JSON}") | \`gh api repos/${REPO}/actions/runs\` |"
+  echo "| Failed runs | $(jq -r '.totals.failed_runs' "${CI_HEALTH_JSON}") | \`gh api repos/${REPO}/actions/runs\` |"
+  echo "| Pass rate | $(jq -r '.totals.pass_rate_percent' "${CI_HEALTH_JSON}")% | \`gh api repos/${REPO}/actions/runs\` |"
   echo "| Meets >=95% target | $(jq -r '.totals.meets_pass_rate_target' "${CI_HEALTH_JSON}") | \`${CI_HEALTH_JSON}\` |"
   echo
   echo "## Workflow Breakdown"

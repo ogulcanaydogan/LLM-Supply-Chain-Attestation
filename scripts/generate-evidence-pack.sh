@@ -36,19 +36,52 @@ require_source() {
   fi
 }
 
+repo_from_git_remote() {
+  local remote
+  remote="$(git config --get remote.origin.url 2>/dev/null || true)"
+  case "${remote}" in
+    git@github.com:*)
+      echo "${remote#git@github.com:}" | sed 's/\.git$//'
+      ;;
+    https://github.com/*)
+      echo "${remote#https://github.com/}" | sed 's/\.git$//'
+      ;;
+    http://github.com/*)
+      echo "${remote#http://github.com/}" | sed 's/\.git$//'
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+gh_api_retry() {
+  local attempt
+  for attempt in 1 2 3; do
+    if gh api "$@"; then
+      return 0
+    fi
+    sleep $((attempt * 2))
+  done
+  return 1
+}
+
 require_cmd gh
 require_cmd jq
 
 if ! gh auth status >/dev/null 2>&1; then
   if [[ -z "${GH_TOKEN:-}" && -z "${GITHUB_TOKEN:-}" ]]; then
-    echo "error: gh is not authenticated. run: gh auth login" >&2
-    exit 1
+    echo "warning: gh is not authenticated; using anonymous API access (rate-limited)." >&2
   fi
 fi
 
 REPO="${1:-}"
 if [[ -z "${REPO}" ]]; then
-  REPO="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+  REPO="$(repo_from_git_remote)"
+fi
+if [[ -z "${REPO}" ]]; then
+  echo "error: repository argument is required when git remote cannot be resolved" >&2
+  exit 1
 fi
 REPO_URL="https://github.com/${REPO}"
 
@@ -107,9 +140,9 @@ COSIGN_PR_JSON="${TMP_DIR}/cosign-pr.json"
 OPA_PR_JSON="${TMP_DIR}/opa-pr.json"
 SCORECARD_PR_JSON="${TMP_DIR}/scorecard-pr.json"
 
-gh api repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
-gh api repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
-gh api repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
+gh_api_retry repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
+gh_api_retry repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
+gh_api_retry repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
 
 UPSTREAM_STATES_JSON="${TMP_DIR}/upstream-pr-states.json"
 jq -s '
