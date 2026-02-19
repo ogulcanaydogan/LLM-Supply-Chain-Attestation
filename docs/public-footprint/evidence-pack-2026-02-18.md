@@ -5,7 +5,7 @@
 - Name: `LLM-Supply-Chain-Attestation (llmsa)`
 - Repository: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation
 - Reporting window: 2026-02-18 to 2026-03-19 (UTC, rolling 30-day execution window)
-- Generated at (UTC): `2026-02-19T21:44:25Z`
+- Generated at (UTC): `2026-02-19T21:46:32Z`
 
 ## Evidence Summary
 
@@ -34,10 +34,10 @@
 | Upstream PRs closed (unmerged) | 2 | https://github.com/open-policy-agent/opa/pull/8343, https://github.com/open-policy-agent/opa/pull/8346, https://github.com/ossf/scorecard/pull/4942, https://github.com/sigstore/cosign/pull/4710 |
 | Third-party mentions | 1 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous case studies | 1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
-| Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260219T214411Z/snapshot.json` |
-| Release downloads (cumulative) | 324 | `.llmsa/public-footprint/20260219T214411Z/snapshot.json` |
-| CI pass rate (last 30 days) | 87.5% (49/56) | `.llmsa/public-footprint/20260219T214411Z/ci-health.json` |
-| CI pass rate (post-hardening window) | 100% (16/16) | `.llmsa/public-footprint/20260219T214411Z/ci-health.json` |
+| Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260219T214620Z/snapshot.json` |
+| Release downloads (cumulative) | 324 | `.llmsa/public-footprint/20260219T214620Z/snapshot.json` |
+| CI pass rate (last 30 days) | 87.5% (49/56) | `.llmsa/public-footprint/20260219T214626Z/ci-health.json` |
+| CI pass rate (post-hardening window) | 100% (16/16) | `.llmsa/public-footprint/20260219T214626Z/ci-health.json` |
 | Tamper detection success rate | 100.00% (20/20) | `.llmsa/tamper/results.json` |
 | Verify p95 (100 statements) | 27.0 ms | `.llmsa/benchmarks/20260219T214353Z/summary.md` |
 
