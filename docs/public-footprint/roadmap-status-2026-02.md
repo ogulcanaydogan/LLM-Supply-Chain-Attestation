@@ -17,7 +17,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `1` open (`scorecard#4942`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `87.72% (50/57)`; post-hardening `100% (17/17)` | partially complete |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `88.14% (52/59)`; post-hardening `100% (19/19)` | partially complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | still gist mirror; Dev.to workflow blocked by missing `DEVTO_API_KEY` | blocked (credential dependency) |
@@ -28,7 +28,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 - Practical complete: `false`
 - Blockers:
   - A canonical third-party mention URL (non-GitHub/Gist) is required.
-  - Rolling 30-day CI pass rate is below target (`87.72%`, target `>=95%`).
+  - Rolling 30-day CI pass rate is below target (`88.14%`, target `>=95%`).
 
 ## Completion Gates Remaining
 
