@@ -196,3 +196,160 @@ func TestDecodePayload_ValidBase64InvalidJSON(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 }
+
+// --- SigstoreSigner PEM fallback: nonexistent key file ---
+
+func TestSigstoreSignerPEMFallback_NonexistentKeyFile(t *testing.T) {
+	signer := &SigstoreSigner{PEMKeyPath: "/nonexistent/key.pem"}
+	_, err := signer.Sign([]byte(`{"k":"v"}`))
+	if err == nil {
+		t.Fatal("expected error for nonexistent PEM key path")
+	}
+	if !strings.Contains(err.Error(), "read pem key") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// --- SigstoreSigner PEM fallback: happy path ---
+
+func TestSigstoreSignerPEMFallback_HappyPath(t *testing.T) {
+	dir := t.TempDir()
+	keyPath := filepath.Join(dir, "key.pem")
+	if err := GeneratePEMPrivateKey(keyPath); err != nil {
+		t.Fatal(err)
+	}
+
+	signer := &SigstoreSigner{
+		PEMKeyPath: keyPath,
+		Issuer:     "https://custom.issuer",
+		Identity:   "https://custom.identity",
+	}
+	material, err := signer.Sign([]byte(`{"attestation":"test"}`))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if material.Provider != "sigstore" {
+		t.Fatalf("expected provider=sigstore, got %q", material.Provider)
+	}
+	if material.OIDCIssuer != "https://custom.issuer" {
+		t.Fatalf("expected custom issuer, got %q", material.OIDCIssuer)
+	}
+	if material.OIDCIdentity != "https://custom.identity" {
+		t.Fatalf("expected custom identity, got %q", material.OIDCIdentity)
+	}
+	if material.SigB64 == "" {
+		t.Fatal("expected non-empty signature")
+	}
+	if material.PublicKeyPEM == "" {
+		t.Fatal("expected non-empty public key PEM")
+	}
+}
+
+// --- SigstoreSigner keyless: cosign not found ---
+
+func TestSigstoreSignerKeyless_CosignNotFound(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	signer := &SigstoreSigner{} // No PEMKeyPath → keyless path
+	_, err := signer.Sign([]byte(`{"k":"v"}`))
+	if err == nil {
+		t.Fatal("expected error when cosign is not in PATH")
+	}
+	if !strings.Contains(err.Error(), "cosign binary not found") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// --- defaultOIDCClaims: GITHUB_WORKFLOW_REF set ---
+
+func TestDefaultOIDCClaims_GitHubWorkflowRef(t *testing.T) {
+	t.Setenv("GITHUB_WORKFLOW_REF", "org/repo/.github/workflows/ci.yml@refs/heads/main")
+	issuer, identity := defaultOIDCClaims("", "")
+	if issuer != "https://token.actions.githubusercontent.com" {
+		t.Fatalf("unexpected issuer: %s", issuer)
+	}
+	if identity != "https://github.com/org/repo/.github/workflows/ci.yml@refs/heads/main" {
+		t.Fatalf("unexpected identity: %s", identity)
+	}
+}
+
+// --- defaultOIDCClaims: individual env vars ---
+
+func TestDefaultOIDCClaims_IndividualEnvVars(t *testing.T) {
+	t.Setenv("GITHUB_WORKFLOW_REF", "")
+	t.Setenv("GITHUB_REPOSITORY", "myorg/myrepo")
+	t.Setenv("GITHUB_WORKFLOW", "release.yml")
+	t.Setenv("GITHUB_REF", "refs/tags/v1.0.0")
+
+	_, identity := defaultOIDCClaims("", "")
+	if !strings.Contains(identity, "myorg/myrepo") {
+		t.Fatalf("expected repo in identity, got: %s", identity)
+	}
+	if !strings.Contains(identity, "release.yml") {
+		t.Fatalf("expected workflow in identity, got: %s", identity)
+	}
+	if !strings.Contains(identity, "refs/tags/v1.0.0") {
+		t.Fatalf("expected ref in identity, got: %s", identity)
+	}
+}
+
+// --- signMaterialFromCosignOutputs: valid cert ---
+
+func TestSignMaterialFromCosignOutputs_ValidCert(t *testing.T) {
+	certPEM := selfSignedCertPEM(t)
+	material, err := signMaterialFromCosignOutputs("c2lnbmF0dXJl", certPEM, "https://issuer", "https://identity")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if material.Provider != "sigstore" {
+		t.Fatalf("expected provider=sigstore, got %q", material.Provider)
+	}
+	if !strings.HasPrefix(material.KeyID, "sigstore-") {
+		t.Fatalf("expected sigstore- prefix in key ID, got %q", material.KeyID)
+	}
+	if material.PublicKeyPEM == "" {
+		t.Fatal("expected non-empty public key PEM extracted from cert")
+	}
+	if material.CertificatePEM != certPEM {
+		t.Fatal("certificate PEM mismatch")
+	}
+}
+
+// --- signMaterialFromCosignOutputs: unparseable cert ---
+
+func TestSignMaterialFromCosignOutputs_UnparseableCert(t *testing.T) {
+	badCert := "-----BEGIN CERTIFICATE-----\nYWJj\n-----END CERTIFICATE-----"
+	material, err := signMaterialFromCosignOutputs("c2lnbmF0dXJl", badCert, "https://issuer", "https://identity")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if material.PublicKeyPEM != "" {
+		t.Fatal("expected empty public key PEM for unparseable cert")
+	}
+	if !strings.HasPrefix(material.KeyID, "sigstore-") {
+		t.Fatalf("expected sigstore- key ID from raw cert digest, got %q", material.KeyID)
+	}
+}
+
+// --- signMaterialFromCosignOutputs: empty sig only ---
+
+func TestSignMaterialFromCosignOutputs_EmptySigOnly(t *testing.T) {
+	_, err := signMaterialFromCosignOutputs("", "some-cert", "", "")
+	if err == nil {
+		t.Fatal("expected error for empty signature")
+	}
+	if !strings.Contains(err.Error(), "empty signature") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+// --- signMaterialFromCosignOutputs: empty cert only ---
+
+func TestSignMaterialFromCosignOutputs_EmptyCertOnly(t *testing.T) {
+	_, err := signMaterialFromCosignOutputs("sig-data", "", "", "")
+	if err == nil {
+		t.Fatal("expected error for empty certificate")
+	}
+	if !strings.Contains(err.Error(), "empty certificate") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
