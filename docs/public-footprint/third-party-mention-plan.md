@@ -43,6 +43,8 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
 - Dev.to publish automation is ready but currently blocked by missing credential:
   - `DEVTO_API_KEY` is not set in the execution environment.
   - command: `PUBLISHED_FLAG=true ./scripts/publish-devto-mention.sh`
+  - workflow option: `.github/workflows/publish-third-party-mention.yml` (`workflow_dispatch`)
+  - prerequisite: set repository secret `DEVTO_API_KEY`
 - Evidence pack prepared for post-publication URL insertion:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
 

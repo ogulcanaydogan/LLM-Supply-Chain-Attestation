@@ -264,6 +264,16 @@ RELEASE_DOWNLOADS="$(jq -r '.release_downloads_total // 0' "${SNAPSHOT_JSON}")"
 CI_PASS_RATE="$(jq -r '.totals.pass_rate_percent // 0' "${CI_HEALTH_JSON}")"
 CI_SUCCESS="$(jq -r '.totals.successful_runs // 0' "${CI_HEALTH_JSON}")"
 CI_TOTAL="$(jq -r '.totals.completed_runs // 0' "${CI_HEALTH_JSON}")"
+CI_POST_HARDENING_SINCE="$(jq -r '.post_hardening_since_utc // empty' "${CI_HEALTH_JSON}")"
+CI_POST_HARDENING_PASS_RATE="$(jq -r 'if .totals.post_hardening_pass_rate_percent == null then "n/a" else (.totals.post_hardening_pass_rate_percent|tostring) end' "${CI_HEALTH_JSON}")"
+CI_POST_HARDENING_SUCCESS="$(jq -r '.totals.post_hardening_successful_runs // 0' "${CI_HEALTH_JSON}")"
+CI_POST_HARDENING_TOTAL="$(jq -r '.totals.post_hardening_completed_runs // 0' "${CI_HEALTH_JSON}")"
+CI_POST_HARDENING_TARGET_MET="$(jq -r 'if .totals.meets_post_hardening_pass_rate_target == null then "n/a" else (.totals.meets_post_hardening_pass_rate_target|tostring) end' "${CI_HEALTH_JSON}")"
+
+CI_POST_HARDENING_VALUE="${CI_POST_HARDENING_PASS_RATE}%"
+if [[ "${CI_POST_HARDENING_PASS_RATE}" == "n/a" ]]; then
+  CI_POST_HARDENING_VALUE="n/a"
+fi
 
 TAMPER_TOTAL="$(jq -r '.total_cases // 0' "${TAMPER_RESULTS_JSON}")"
 TAMPER_PASSED="$(jq -r '.passed // 0' "${TAMPER_RESULTS_JSON}")"
@@ -300,6 +310,7 @@ require_source "Anonymous pilot case studies" "${CASE_STUDY_SOURCE}"
 require_source "Stars/Forks/Watchers" "${SNAPSHOT_SOURCE}"
 require_source "Release downloads" "${SNAPSHOT_SOURCE}"
 require_source "CI pass rate" "${CI_SOURCE}"
+require_source "Post-hardening CI pass rate" "${CI_SOURCE}"
 require_source "Tamper detection" "${TAMPER_SOURCE}"
 require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
 
@@ -324,12 +335,16 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "| GitHub watchers | 0 | >=5 | ${WATCHERS} | \`${SNAPSHOT_SOURCE}\` |"
   echo "| Release downloads (cumulative) | 184 | >=400 | $((RELEASE_DOWNLOADS - 184)) | \`${SNAPSHOT_SOURCE}\` |"
   echo "| CI pass rate (last 30 days) | 93.3% | >=95% | ${CI_PASS_RATE}% | \`${CI_SOURCE}\` |"
+  echo "| CI pass rate (post-hardening window) | n/a | >=95% | ${CI_POST_HARDENING_VALUE} | \`${CI_SOURCE}\` |"
   echo
   echo "## Current Snapshot (${TODAY_UTC} UTC)"
   echo
   echo "- Snapshot artifact (local): \`${SNAPSHOT_JSON}\`"
   echo "- CI health artifact (local): \`${CI_HEALTH_JSON}\`"
   echo "- CI pass rate source window: ${CI_SUCCESS}/${CI_TOTAL} successful runs (\`${CI_PASS_RATE}%\`)."
+  if [[ -n "${CI_POST_HARDENING_SINCE}" ]]; then
+    echo "- CI pass rate post-hardening (\`${CI_POST_HARDENING_SINCE}\`): ${CI_POST_HARDENING_SUCCESS}/${CI_POST_HARDENING_TOTAL} successful runs (\`${CI_POST_HARDENING_VALUE}\`, meets target=\`${CI_POST_HARDENING_TARGET_MET}\`)."
+  fi
   echo "- External write-up URL: ${THIRD_PARTY_MENTION_URL}"
   echo "- Upstream PR review stage:"
   echo "  - \`in-review\`: ${UPSTREAM_IN_REVIEW_COUNT}"
@@ -387,6 +402,7 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "| Stars / forks / watchers | ${STARS} / ${FORKS} / ${WATCHERS} | \`${SNAPSHOT_SOURCE}\` |"
   echo "| Release downloads (cumulative) | ${RELEASE_DOWNLOADS} | \`${SNAPSHOT_SOURCE}\` |"
   echo "| CI pass rate (last 30 days) | ${CI_PASS_RATE}% (${CI_SUCCESS}/${CI_TOTAL}) | \`${CI_SOURCE}\` |"
+  echo "| CI pass rate (post-hardening window) | ${CI_POST_HARDENING_VALUE} (${CI_POST_HARDENING_SUCCESS}/${CI_POST_HARDENING_TOTAL}) | \`${CI_SOURCE}\` |"
   echo "| Tamper detection success rate | ${TAMPER_RATE}% (${TAMPER_PASSED}/${TAMPER_TOTAL}) | \`${TAMPER_SOURCE}\` |"
   echo "| Verify p95 (100 statements) | ${VERIFY_P95} ms | \`${BENCHMARK_METRIC_SOURCE}\` |"
   echo

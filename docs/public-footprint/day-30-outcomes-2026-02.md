@@ -13,13 +13,15 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 | Third-party mention count | >=1 | 1 (gist mirror) | partially met | `docs/public-footprint/evidence-pack-2026-02-18.md` |
 | Anonymous pilot case study | >=1 | 1 | achieved | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Hardening release closure | v1.0.1 complete evidence | complete | achieved | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
-| CI pass-rate (rolling 30-day) | >=95% | 85.42% (41/48) | not met | `.llmsa/public-footprint/20260219T211051Z/ci-health.json` |
+| CI pass-rate (rolling 30-day) | >=95% | 85.71% (42/49) | not met | `.llmsa/public-footprint/20260219T211649Z/ci-health.json` |
+| CI pass-rate (post-hardening baseline) | >=95% | 100% (9/9) | achieved | `.llmsa/public-footprint/20260219T211649Z/ci-health.json` |
 
 ## What Worked
 
 1. `v1.0.1` release and verification path closed cleanly with signed assets.
 2. Weekly footprint automation now produces snapshot + CI health + generated evidence docs.
 3. Upstream cadence process became explicit and traceable (48h follow-up workflow), and maintainer-requested revisions were pushed to `cosign#4710`.
+4. Reliability trend after hardening is now explicit and measurable (`post_hardening_pass_rate_percent` in CI health snapshots).
 
 ## What Did Not Convert
 

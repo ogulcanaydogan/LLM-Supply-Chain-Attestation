@@ -87,6 +87,7 @@ fi
 
 WINDOW_DAYS="${WINDOW_DAYS:-30}"
 SINCE_DATE="$(date_days_ago "${WINDOW_DAYS}")"
+POST_HARDENING_SINCE_UTC="${POST_HARDENING_SINCE_UTC:-2026-02-19T16:08:22Z}"
 GENERATED_AT="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 TS="$(date -u +"%Y%m%dT%H%M%SZ")"
 OUT_DIR="${FOOTPRINT_OUT_DIR:-.llmsa/public-footprint/${TS}}"
@@ -189,6 +190,7 @@ jq -n \
   --arg generated_at "${GENERATED_AT}" \
   --arg repo "${REPO}" \
   --arg since_date "${SINCE_DATE}" \
+  --arg post_hardening_since "${POST_HARDENING_SINCE_UTC}" \
   --argjson window_days "${WINDOW_DAYS}" \
   --argjson workflows "${workflows_json}" \
   --slurpfile runs "${ALL_RUNS_JSON}" \
@@ -202,15 +204,20 @@ jq -n \
   | ($completed_runs | length) as $completed_total
   | ($completed_runs | map(select(.conclusion == "success")) | length) as $success_total
   | ($completed_total - $success_total) as $failure_total
+  | ($completed_runs | map(select(.createdAt >= $post_hardening_since))) as $post_hardening_runs
+  | ($post_hardening_runs | length) as $post_hardening_total
+  | ($post_hardening_runs | map(select(.conclusion == "success")) | length) as $post_hardening_success
   | ($failures[0] // []) as $failure_details
   | {
       generated_at_utc: $generated_at,
       repo: $repo,
       window_days: $window_days,
       window_start_utc: ($since_date + "T00:00:00Z"),
+      post_hardening_since_utc: $post_hardening_since,
       methodology: {
         include_status: "completed",
-        exclude_conclusions: ["cancelled"]
+        exclude_conclusions: ["cancelled"],
+        post_hardening_window: ("createdAt >= " + $post_hardening_since)
       },
       sources: {
         gh_runs_api: "gh api repos/<owner>/<repo>/actions/runs?per_page=100",
@@ -222,7 +229,13 @@ jq -n \
         failed_runs: $failure_total,
         pass_rate_percent: pct($success_total; $completed_total),
         pass_rate_target_percent: 95.0,
-        meets_pass_rate_target: (pct($success_total; $completed_total) >= 95.0)
+        meets_pass_rate_target: (pct($success_total; $completed_total) >= 95.0),
+        post_hardening_completed_runs: $post_hardening_total,
+        post_hardening_successful_runs: $post_hardening_success,
+        post_hardening_failed_runs: ($post_hardening_total - $post_hardening_success),
+        post_hardening_pass_rate_percent: pct($post_hardening_success; $post_hardening_total),
+        post_hardening_pass_rate_target_percent: 95.0,
+        meets_post_hardening_pass_rate_target: (pct($post_hardening_success; $post_hardening_total) >= 95.0)
       },
       by_workflow: [
         $workflows[] as $wf
@@ -253,6 +266,7 @@ jq -n \
   echo "- Repository: \`${REPO}\`"
   echo "- Window: last \`${WINDOW_DAYS}\` days (from \`${SINCE_DATE}\`)"
   echo "- Method: completed runs only; \`cancelled\` conclusions are excluded."
+  echo "- Post-hardening baseline (UTC): \`${POST_HARDENING_SINCE_UTC}\`"
   echo
   echo "## Totals"
   echo
@@ -263,6 +277,10 @@ jq -n \
   echo "| Failed runs | $(jq -r '.totals.failed_runs' "${CI_HEALTH_JSON}") | \`gh api repos/${REPO}/actions/runs\` |"
   echo "| Pass rate | $(jq -r '.totals.pass_rate_percent' "${CI_HEALTH_JSON}")% | \`gh api repos/${REPO}/actions/runs\` |"
   echo "| Meets >=95% target | $(jq -r '.totals.meets_pass_rate_target' "${CI_HEALTH_JSON}") | \`${CI_HEALTH_JSON}\` |"
+  echo "| Post-hardening completed runs | $(jq -r '.totals.post_hardening_completed_runs' "${CI_HEALTH_JSON}") | \`${CI_HEALTH_JSON}\` |"
+  echo "| Post-hardening successful runs | $(jq -r '.totals.post_hardening_successful_runs' "${CI_HEALTH_JSON}") | \`${CI_HEALTH_JSON}\` |"
+  echo "| Post-hardening pass rate | $(jq -r '.totals.post_hardening_pass_rate_percent' "${CI_HEALTH_JSON}")% | \`${CI_HEALTH_JSON}\` |"
+  echo "| Meets post-hardening >=95% target | $(jq -r '.totals.meets_post_hardening_pass_rate_target' "${CI_HEALTH_JSON}") | \`${CI_HEALTH_JSON}\` |"
   echo
   echo "## Workflow Breakdown"
   echo

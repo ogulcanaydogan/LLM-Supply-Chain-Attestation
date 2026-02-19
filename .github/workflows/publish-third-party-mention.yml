@@ -1,0 +1,68 @@
+name: publish-third-party-mention
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: "Article title"
+        required: false
+        default: "From Scripts to Evidence: LLM Artifact Integrity in CI/CD"
+        type: string
+      draft_file:
+        description: "Draft markdown path"
+        required: false
+        default: "docs/public-footprint/third-party-mention-draft-2026-02.md"
+        type: string
+      publish:
+        description: "Publish immediately (true) or create draft (false)"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Dev.to secret
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+        run: |
+          if [[ -z "${DEVTO_API_KEY}" ]]; then
+            echo "DEVTO_API_KEY secret is required."
+            echo "Set repository secret DEVTO_API_KEY, then re-run this workflow."
+            exit 1
+          fi
+
+      - name: Publish mention
+        id: publish
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+          PUBLISHED_FLAG: ${{ inputs.publish }}
+        run: |
+          set -euo pipefail
+          chmod +x scripts/publish-devto-mention.sh
+          output="$(./scripts/publish-devto-mention.sh "${{ inputs.title }}" "${{ inputs.draft_file }}")"
+          echo "${output}" | tee publish-output.txt
+          url="$(echo "${output}" | sed -n 's/^published_url=//p' | tail -n1)"
+          if [[ -z "${url}" ]]; then
+            echo "error: publish script did not return published_url"
+            exit 1
+          fi
+          echo "published_url=${url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload publish output
+        uses: actions/upload-artifact@v4
+        with:
+          name: third-party-mention-publish
+          path: publish-output.txt
+
+      - name: Workflow summary
+        run: |
+          echo "Published URL: ${{ steps.publish.outputs.published_url }}" >> "${GITHUB_STEP_SUMMARY}"

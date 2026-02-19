@@ -39,3 +39,4 @@ The goal is to convert strong internal engineering quality into externally verif
 2. Update `external-contribution-log.md` on every external PR event.
 3. Keep all public claims linked to public URLs (release, workflow, PR, post, talk).
 4. Keep non-claims updated when scope changes.
+5. Publish canonical third-party mention via `.github/workflows/publish-third-party-mention.yml` once `DEVTO_API_KEY` secret is configured.
