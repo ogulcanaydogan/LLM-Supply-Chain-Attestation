@@ -30,6 +30,7 @@ The goal is to convert strong internal engineering quality into externally verif
 - `evidence-pack-2026-02-18.md`: filled evidence pack with live URLs and metric snapshot.
 - `what-we-do-not-claim.md`: explicit non-claims and known limitations language.
 - `day0-metrics-2026-02-18.md`: initial baseline snapshot.
+- `roadmap-status-2026-02.md`: current roadmap-completion status and endgame gates.
 - `external-contribution-log.md`: tracker for opened/merged external PRs.
 - `v1.0.1-hardening-closure.md`: hardening completion checklist and linked evidence.
 
