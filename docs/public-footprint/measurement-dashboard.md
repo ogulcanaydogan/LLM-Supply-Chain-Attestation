@@ -17,16 +17,16 @@ Day-0 values are captured on **2026-02-18 UTC**.
 | GitHub forks | 0 | >=5 | 0 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
 | GitHub watchers | 0 | >=5 | 0 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
 | Release downloads (cumulative) | 184 | >=400 | 98 | `.llmsa/public-footprint/20260219T210819Z/snapshot.json` |
-| CI pass rate (last 30 days) | 93.3% | >=95% | 85.11% | `.llmsa/public-footprint/20260219T210825Z/ci-health.json` |
+| CI pass rate (last 30 days) | 93.3% | >=95% | 85.42% | `.llmsa/public-footprint/20260219T211051Z/ci-health.json` |
 
 ## Current Snapshot (2026-02-19 UTC)
 
 - Snapshot artifact (local): `.llmsa/public-footprint/20260219T210819Z/snapshot.json`
-- CI health artifact (local): `.llmsa/public-footprint/20260219T210825Z/ci-health.json`
-- CI pass rate source window: 40/47 successful runs (`85.11%`).
+- CI health artifact (local): `.llmsa/public-footprint/20260219T211051Z/ci-health.json`
+- CI pass rate source window: 41/48 successful runs (`85.42%`).
 - External write-up URL: https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
 - Upstream PR review stage:
   - `in-review`: 2
   - `closed`: 2
   - `merged`: 0
-- Dashboard generated at: `2026-02-19T21:08:31Z`
+- Dashboard generated at: `2026-02-19T21:10:57Z`
