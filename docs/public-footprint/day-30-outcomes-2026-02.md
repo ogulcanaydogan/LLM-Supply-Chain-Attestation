@@ -13,8 +13,8 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 | Third-party mention count | >=1 | 1 (gist mirror) | partially met | `docs/public-footprint/evidence-pack-2026-02-18.md` |
 | Anonymous pilot case study | >=1 | 1 | achieved | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Hardening release closure | v1.0.1 complete evidence | complete | achieved | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
-| CI pass-rate (rolling 30-day) | >=95% | 85.71% (42/49) | not met | `.llmsa/public-footprint/20260219T211649Z/ci-health.json` |
-| CI pass-rate (post-hardening baseline) | >=95% | 100% (9/9) | achieved | `.llmsa/public-footprint/20260219T211649Z/ci-health.json` |
+| CI pass-rate (rolling 30-day) | >=95% | 86.54% (45/52) | not met | `.llmsa/public-footprint/20260219T212641Z/ci-health.json` |
+| CI pass-rate (post-hardening baseline) | >=95% | 100% (12/12) | achieved | `.llmsa/public-footprint/20260219T212641Z/ci-health.json` |
 
 ## What Worked
 
@@ -27,7 +27,7 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 1. No upstream PR merged yet in-window.
 2. OPA docs contribution line was closed twice (`#8343`, `#8346`) with maintainer guidance to keep this pattern in project docs.
-3. Third-party mention is still gist-based; canonical non-GitHub publication is pending because `DEVTO_API_KEY` is not yet configured (see failed secret preflight run: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22200503946).
+3. Third-party mention is still gist-based; canonical non-GitHub publication is pending because `DEVTO_API_KEY` is not yet configured (latest failed secret preflight run: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22200708796).
 
 ## Next Cycle Priorities
 
