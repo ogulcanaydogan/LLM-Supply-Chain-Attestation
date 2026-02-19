@@ -109,6 +109,81 @@ func TestVerifyProvenanceChainTemporalOrder(t *testing.T) {
 	}
 }
 
+func TestVerifyProvenanceChainSingleBundleLenient(t *testing.T) {
+	// Single bundle with no DependsOn should pass (lenient single-bundle mode)
+	report := VerifyProvenanceChain([]ChainStatement{
+		{
+			StatementID:     "eval-1",
+			AttestationType: "eval_attestation",
+			GeneratedAt:     "2026-02-17T20:10:11Z",
+		},
+	})
+	if !report.Valid {
+		t.Fatalf("expected valid chain for single lenient bundle, got violations: %v", report.Violations)
+	}
+}
+
+func TestVerifyProvenanceChainEvalRequiresBothDeps(t *testing.T) {
+	// Eval has prompt but not corpus → should fail
+	report := VerifyProvenanceChain([]ChainStatement{
+		{
+			StatementID:     "prompt-1",
+			AttestationType: "prompt_attestation",
+			GeneratedAt:     "2026-02-17T20:10:11Z",
+		},
+		{
+			StatementID:     "eval-1",
+			AttestationType: "eval_attestation",
+			GeneratedAt:     "2026-02-17T20:10:13Z",
+			DependsOn:       []string{"prompt_attestation"},
+		},
+	})
+	if report.Valid {
+		t.Fatalf("expected invalid chain when eval is missing corpus dependency")
+	}
+	if !containsViolation(report.Violations, "corpus_attestation") {
+		t.Fatalf("expected violation mentioning corpus_attestation, got %v", report.Violations)
+	}
+}
+
+func TestVerifyBasicChainConstraintsMissingTimestamp(t *testing.T) {
+	err := VerifyBasicChainConstraints(map[string]any{})
+	if err == nil {
+		t.Fatal("expected error for missing generated_at")
+	}
+	if !strings.Contains(err.Error(), "generated_at is required") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestVerifyBasicChainConstraintsValidTimestamp(t *testing.T) {
+	err := VerifyBasicChainConstraints(map[string]any{
+		"generated_at": "2026-02-17T20:10:11Z",
+	})
+	if err != nil {
+		t.Fatalf("expected no error for valid timestamp, got: %v", err)
+	}
+}
+
+func TestVerifyBasicChainConstraintsInvalidTimestamp(t *testing.T) {
+	err := VerifyBasicChainConstraints(map[string]any{
+		"generated_at": "not-a-timestamp",
+	})
+	if err == nil {
+		t.Fatal("expected error for invalid timestamp format")
+	}
+	if !strings.Contains(err.Error(), "invalid generated_at") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestVerifyProvenanceChainEmptyStatements(t *testing.T) {
+	report := VerifyProvenanceChain([]ChainStatement{})
+	if !report.Valid {
+		t.Fatalf("expected valid chain for empty statements")
+	}
+}
+
 func containsViolation(violations []string, needle string) bool {
 	for _, v := range violations {
 		if strings.Contains(v, needle) {

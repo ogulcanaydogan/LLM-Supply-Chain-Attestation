@@ -145,6 +145,46 @@ func TestPEMSigner_RoundTrip(t *testing.T) {
 	}
 }
 
+func TestGeneratePEMPrivateKey_InvalidPath(t *testing.T) {
+	err := GeneratePEMPrivateKey("/nonexistent/dir/key.pem")
+	if err == nil {
+		t.Fatal("expected error for invalid directory path")
+	}
+}
+
+func TestGeneratePEMPrivateKey_CreatesEd25519Key(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "check.pem")
+	if err := GeneratePEMPrivateKey(path); err != nil {
+		t.Fatal(err)
+	}
+
+	raw, _ := os.ReadFile(path)
+	block, _ := pem.Decode(raw)
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := key.(ed25519.PrivateKey); !ok {
+		t.Fatalf("expected ed25519.PrivateKey, got %T", key)
+	}
+}
+
+func TestPEMSigner_ConsistentPublicKey(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "key.pem")
+	GeneratePEMPrivateKey(path)
+	signer, _ := NewPEMSigner(path)
+
+	mat1, _ := signer.Sign([]byte("payload-1"))
+	mat2, _ := signer.Sign([]byte("payload-2"))
+
+	// Same signer should produce same public key
+	if mat1.PublicKeyPEM != mat2.PublicKeyPEM {
+		t.Error("same key should produce same public key PEM")
+	}
+}
+
 func TestPEMSigner_DifferentPayloads(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "key.pem")

@@ -6,30 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-02-19
+
 ### Added
-- Public-footprint documentation pack under `docs/public-footprint/` covering evidence baseline, upstream contribution briefs, mention plan, anonymous case study template, non-claims, and evidence-pack template.
-- Filled execution artifacts:
-  - `docs/public-footprint/external-contribution-log.md` updated with live Sigstore and OPA PRs.
-  - `docs/public-footprint/external-contribution-log.md` extended with OpenSSF Scorecard PR.
-  - upstream PR statuses advanced to `in-review` with DCO checks passing.
-  - `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` published.
-  - `docs/public-footprint/evidence-pack-2026-02-18.md` published with URL-linked evidence and metrics.
-  - `docs/public-footprint/third-party-mention-draft-2026-02.md` added as publish-ready external write-up.
-  - External write-up published at gist URL and linked in dashboard/evidence pack.
-- `scripts/public-footprint-snapshot.sh` for reproducible public-metrics snapshots (stars/forks/releases/CI pass rate/PR activity).
-- Weekly metrics artifact workflow `.github/workflows/public-footprint-weekly.yml`.
 - Kubernetes validating admission webhook (`internal/webhook/`) for deployment-time attestation enforcement.
 - `llmsa webhook serve` CLI command with TLS, fail-open, and policy configuration flags.
 - Kubernetes manifests (`deploy/webhook/`) and Helm chart (`deploy/helm/`) for webhook deployment.
 - E2E integration test suite (`test/e2e/`) covering full pipeline, tamper detection, chain verification, and webhook admit/deny flows.
-- Test coverage for all collector types (corpus, eval, route, slo), hash, sign, and verify packages.
-- Test coverage for `internal/policy/yaml`, `internal/report`, `internal/store`, and `pkg/types` packages.
-- Apache 2.0 LICENSE file.
-- Dockerfile with multi-stage distroless build.
-- GoReleaser configuration for multi-platform binary releases and container images.
 - Privacy-aware attestation modes: `hash_only`, `plaintext_explicit`, `encrypted_payload` (age X25519).
 - Rego (OPA) policy engine alongside existing YAML gate engine.
 - Provenance chain verification with dependency graph, temporal ordering, and reference validation.
+- Apache 2.0 LICENSE file.
+- Dockerfile with multi-stage distroless build.
+- GoReleaser configuration for multi-platform binary releases and container images.
+- Test coverage across all packages: verify (79%), sign (73%), attest (63%), CLI (68%), policy/yaml (93%), report (98%), store (79%), webhook (81%), schema (100%), types (100%).
+- Public-footprint documentation pack under `docs/public-footprint/` covering evidence baseline, upstream contribution briefs, mention plan, anonymous case study template, non-claims, and evidence-pack template.
+- `scripts/public-footprint-snapshot.sh` for reproducible public-metrics snapshots (stars/forks/releases/CI pass rate/PR activity).
+- Weekly metrics artifact workflow `.github/workflows/public-footprint-weekly.yml`.
 
 ### Changed
 - `docs/benchmark-methodology.md` rewritten with governance-yield-vs-overhead framing, strict raw artifact contract, and publication rules.

@@ -246,3 +246,165 @@ func TestWebhookServeCommand_Help(t *testing.T) {
 		t.Fatalf("webhook serve help: %v", err)
 	}
 }
+
+// --- Demo Command ---
+
+func TestDemoRunCommand(t *testing.T) {
+	orig, _ := os.Getwd()
+	os.Chdir(repoRoot(t))
+	defer os.Chdir(orig)
+
+	cmd := newDemoCommand()
+	cmd.SetArgs([]string{"run"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("demo run: %v", err)
+	}
+}
+
+// --- Gate Command ---
+
+func TestGateCommand_NoViolations(t *testing.T) {
+	root := repoRoot(t)
+	tmp := t.TempDir()
+
+	// Create and sign all 5 attestation types
+	attTypes := []string{"prompt", "corpus", "eval", "route", "slo"}
+	keyPath := filepath.Join(tmp, "key.pem")
+	if err := sign.GeneratePEMPrivateKey(keyPath); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, attType := range attTypes {
+		outDir := t.TempDir()
+		createCmd := newAttestCommand()
+		createCmd.SetArgs([]string{
+			"create",
+			"--type", attType + "_attestation",
+			"--config", filepath.Join(root, "examples", "tiny-rag", "configs", attType+".yaml"),
+			"--out", outDir,
+		})
+		if err := createCmd.Execute(); err != nil {
+			t.Fatalf("attest create %s: %v", attType, err)
+		}
+
+		entries, _ := os.ReadDir(outDir)
+		for _, e := range entries {
+			if strings.HasPrefix(e.Name(), "statement_") {
+				stmtPath := filepath.Join(outDir, e.Name())
+				signCmd := newSignCommand()
+				signCmd.SetArgs([]string{
+					"--in", stmtPath,
+					"--provider", "pem",
+					"--key", keyPath,
+					"--out", tmp,
+				})
+				if err := signCmd.Execute(); err != nil {
+					t.Fatalf("sign %s: %v", attType, err)
+				}
+			}
+		}
+	}
+
+	// Run gate with default policy
+	gateCmd := newGateCommand()
+	gateCmd.SetArgs([]string{
+		"--policy", filepath.Join(root, "policy", "examples", "mvp-gates.yaml"),
+		"--attestations", tmp,
+	})
+	if err := gateCmd.Execute(); err != nil {
+		t.Fatalf("gate: %v", err)
+	}
+}
+
+// --- Verify Command Multiple Bundles ---
+
+func TestVerifyCommandLocal_MultipleBundles(t *testing.T) {
+	root := repoRoot(t)
+	tmp := t.TempDir()
+	keyPath := filepath.Join(tmp, "key.pem")
+	if err := sign.GeneratePEMPrivateKey(keyPath); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, attType := range []string{"prompt", "corpus", "eval"} {
+		outDir := t.TempDir()
+		createCmd := newAttestCommand()
+		createCmd.SetArgs([]string{
+			"create",
+			"--type", attType + "_attestation",
+			"--config", filepath.Join(root, "examples", "tiny-rag", "configs", attType+".yaml"),
+			"--out", outDir,
+		})
+		if err := createCmd.Execute(); err != nil {
+			t.Fatalf("attest create %s: %v", attType, err)
+		}
+
+		entries, _ := os.ReadDir(outDir)
+		for _, e := range entries {
+			if strings.HasPrefix(e.Name(), "statement_") {
+				stmtPath := filepath.Join(outDir, e.Name())
+				signCmd := newSignCommand()
+				signCmd.SetArgs([]string{
+					"--in", stmtPath,
+					"--provider", "pem",
+					"--key", keyPath,
+					"--out", tmp,
+				})
+				if err := signCmd.Execute(); err != nil {
+					t.Fatalf("sign %s: %v", attType, err)
+				}
+			}
+		}
+	}
+
+	outPath := filepath.Join(tmp, "verify-multi.json")
+	cmd := newVerifyCommand()
+	cmd.SetArgs([]string{
+		"--source", "local",
+		"--attestations", tmp,
+		"--schema-dir", filepath.Join(root, "schemas", "v1"),
+		"--format", "json",
+		"--out", outPath,
+	})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("verify multi: %v", err)
+	}
+
+	raw, _ := os.ReadFile(outPath)
+	var r verify.Report
+	json.Unmarshal(raw, &r)
+	if r.BundleCount != 3 {
+		t.Errorf("expected 3 bundles, got %d", r.BundleCount)
+	}
+}
+
+// --- Attest Create All Types ---
+
+func TestAttestCreateCommand_AllFiveTypes(t *testing.T) {
+	root := repoRoot(t)
+	for _, attType := range []string{"prompt", "corpus", "eval", "route", "slo"} {
+		t.Run(attType, func(t *testing.T) {
+			outDir := t.TempDir()
+			cmd := newAttestCommand()
+			cmd.SetArgs([]string{
+				"create",
+				"--type", attType + "_attestation",
+				"--config", filepath.Join(root, "examples", "tiny-rag", "configs", attType+".yaml"),
+				"--out", outDir,
+			})
+			if err := cmd.Execute(); err != nil {
+				t.Fatalf("attest create %s: %v", attType, err)
+			}
+			entries, _ := os.ReadDir(outDir)
+			found := false
+			for _, e := range entries {
+				if strings.HasPrefix(e.Name(), "statement_") && strings.HasSuffix(e.Name(), ".json") {
+					found = true
+				}
+			}
+			if !found {
+				t.Error("expected statement_*.json in output")
+			}
+		})
+	}
+}

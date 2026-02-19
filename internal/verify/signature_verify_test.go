@@ -132,6 +132,113 @@ func TestVerifySignatureSigstoreWithoutCosign(t *testing.T) {
 	}
 }
 
+func TestVerifySignatureValidPEM(t *testing.T) {
+	tmp := t.TempDir()
+	keyPath := filepath.Join(tmp, "dev.pem")
+	if err := sign.GeneratePEMPrivateKey(keyPath); err != nil {
+		t.Fatal(err)
+	}
+	signer, err := sign.NewPEMSigner(keyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statement := map[string]any{
+		"schema_version":   "1.0.0",
+		"statement_id":     "sig-ok",
+		"attestation_type": "prompt_attestation",
+	}
+	canonical, err := hash.CanonicalJSON(statement)
+	if err != nil {
+		t.Fatal(err)
+	}
+	material, err := signer.Sign(canonical)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle, err := sign.CreateBundle(statement, material)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := VerifySignature(bundle, SignerPolicy{}); err != nil {
+		t.Fatalf("expected valid PEM signature to pass: %v", err)
+	}
+}
+
+func TestVerifySignatureRejectsInvalidSignatureBytes(t *testing.T) {
+	tmp := t.TempDir()
+	keyPath := filepath.Join(tmp, "dev.pem")
+	if err := sign.GeneratePEMPrivateKey(keyPath); err != nil {
+		t.Fatal(err)
+	}
+	signer, err := sign.NewPEMSigner(keyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	statement := map[string]any{"id": "corrupt-sig"}
+	canonical, err := hash.CanonicalJSON(statement)
+	if err != nil {
+		t.Fatal(err)
+	}
+	material, err := signer.Sign(canonical)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle, err := sign.CreateBundle(statement, material)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Corrupt the signature
+	bundle.Envelope.Signatures[0].Sig = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+
+	err = VerifySignature(bundle, SignerPolicy{})
+	if err == nil {
+		t.Fatal("expected error for corrupted signature")
+	}
+	if !strings.Contains(err.Error(), "signature verification failed") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestVerifyIdentityPolicyRejectsIssuerMismatch(t *testing.T) {
+	sig := sign.Signature{
+		OIDCIssuer:   "https://other-issuer.com",
+		OIDCIdentity: "https://github.com/acme/llmsa/.github/workflows/ci.yml@refs/heads/main",
+	}
+	policy := SignerPolicy{
+		OIDCIssuer: "https://token.actions.githubusercontent.com",
+	}
+	err := verifyIdentityPolicy(sig, policy)
+	if err == nil {
+		t.Fatal("expected issuer mismatch error")
+	}
+	if !strings.Contains(err.Error(), "oidc issuer mismatch") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestVerifyIdentityPolicyAcceptsEmptyPolicy(t *testing.T) {
+	sig := sign.Signature{
+		OIDCIssuer:   "https://any-issuer.com",
+		OIDCIdentity: "any-identity",
+	}
+	if err := verifyIdentityPolicy(sig, SignerPolicy{}); err != nil {
+		t.Fatalf("expected empty policy to accept any identity: %v", err)
+	}
+}
+
+func TestParsePublicKeyRejectsInvalidPEM(t *testing.T) {
+	_, err := parsePublicKey("not valid pem data")
+	if err == nil {
+		t.Fatal("expected error for invalid PEM")
+	}
+	if !strings.Contains(err.Error(), "invalid public key pem") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
 func TestParsePublicKeyRejectsUnsupportedType(t *testing.T) {
 	priv, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {

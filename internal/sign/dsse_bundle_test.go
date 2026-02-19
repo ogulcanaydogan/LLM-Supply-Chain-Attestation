@@ -162,3 +162,66 @@ func TestReadBundle_InvalidJSON(t *testing.T) {
 		t.Fatal("expected error for invalid JSON")
 	}
 }
+
+func TestCreateBundle_SigstoreProvider(t *testing.T) {
+	statement := map[string]any{"id": "sigstore-test"}
+	material := SignMaterial{
+		KeyID:          "sigstore-abc123",
+		SigB64:         "c2lnbmF0dXJl",
+		Provider:       "sigstore",
+		PublicKeyPEM:   "-----BEGIN PUBLIC KEY-----\ntest\n-----END PUBLIC KEY-----",
+		CertificatePEM: "-----BEGIN CERTIFICATE-----\ncert\n-----END CERTIFICATE-----",
+		OIDCIssuer:     "https://token.actions.githubusercontent.com",
+		OIDCIdentity:   "https://github.com/acme/llmsa/.github/workflows/ci.yml@refs/heads/main",
+	}
+
+	bundle, err := CreateBundle(statement, material)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sig := bundle.Envelope.Signatures[0]
+	if sig.Provider != "sigstore" {
+		t.Errorf("provider = %q, want sigstore", sig.Provider)
+	}
+	if sig.CertificatePEM == "" {
+		t.Error("expected certificate PEM to be set")
+	}
+	if sig.OIDCIssuer != material.OIDCIssuer {
+		t.Errorf("oidc_issuer = %q, want %q", sig.OIDCIssuer, material.OIDCIssuer)
+	}
+	if sig.OIDCIdentity != material.OIDCIdentity {
+		t.Errorf("oidc_identity = %q, want %q", sig.OIDCIdentity, material.OIDCIdentity)
+	}
+}
+
+func TestWriteBundle_InvalidPath(t *testing.T) {
+	bundle := Bundle{
+		Envelope: Envelope{PayloadType: "test"},
+		Metadata: Metadata{BundleVersion: "1"},
+	}
+	err := WriteBundle("/nonexistent/dir/bundle.json", bundle)
+	if err == nil {
+		t.Fatal("expected error for invalid directory path")
+	}
+}
+
+func TestCreateBundle_PayloadIsBase64Decodable(t *testing.T) {
+	statement := map[string]any{"key": "value", "nested": map[string]any{"a": 1}}
+	material := SignMaterial{KeyID: "k", SigB64: "s", Provider: "pem", PublicKeyPEM: "p"}
+
+	bundle, err := CreateBundle(statement, material)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(bundle.Envelope.Payload)
+	if err != nil {
+		t.Fatalf("payload is not valid base64: %v", err)
+	}
+	if len(decoded) == 0 {
+		t.Error("decoded payload is empty")
+	}
+	if !strings.Contains(string(decoded), "key") {
+		t.Error("decoded payload does not contain expected content")
+	}
+}

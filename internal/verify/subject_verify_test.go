@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/hash"
 )
 
 func TestVerifySubjects_AllMatch(t *testing.T) {
@@ -124,5 +126,58 @@ func TestVerifySubjects_MultipleSubjects(t *testing.T) {
 	statement := map[string]any{"subject": subjects}
 	if err := VerifySubjects(statement); err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestVerifySubjects_DirectoryDigest(t *testing.T) {
+	dir := t.TempDir()
+	subDir := filepath.Join(dir, "prompts")
+	os.MkdirAll(subDir, 0o755)
+	os.WriteFile(filepath.Join(subDir, "a.txt"), []byte("file a"), 0o644)
+	os.WriteFile(filepath.Join(subDir, "b.txt"), []byte("file b"), 0o644)
+
+	// Compute the tree digest
+	treeDigest, _, _, err := hash.DigestTree(subDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cleanDigest := strings.TrimPrefix(treeDigest, "sha256:")
+
+	statement := map[string]any{
+		"subject": []any{
+			map[string]any{
+				"uri":    subDir,
+				"digest": map[string]any{"sha256": cleanDigest},
+			},
+		},
+	}
+
+	if err := VerifySubjects(statement); err != nil {
+		t.Fatalf("expected directory subject to pass: %v", err)
+	}
+}
+
+func TestVerifySubjects_InvalidSubjectEntry(t *testing.T) {
+	statement := map[string]any{
+		"subject": []any{
+			"not-a-map",
+		},
+	}
+	err := VerifySubjects(statement)
+	if err == nil {
+		t.Fatal("expected error for non-map subject entry")
+	}
+	if !strings.Contains(err.Error(), "invalid subject entry") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestVerifySubjects_EmptySubjects(t *testing.T) {
+	statement := map[string]any{
+		"subject": []any{},
+	}
+	// Empty subjects should pass (nothing to verify)
+	if err := VerifySubjects(statement); err != nil {
+		t.Fatalf("expected empty subjects to pass: %v", err)
 	}
 }
