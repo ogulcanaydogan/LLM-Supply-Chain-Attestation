@@ -20,11 +20,13 @@
 | Tamper test suite executed (20 cases) | Benchmark/Security | 2026-02-19 | repository artifact path: `.llmsa/tamper/results.md` |
 | Upstream contribution opened (Sigstore) | External PR | 2026-02-18 | https://github.com/sigstore/cosign/pull/4710 |
 | Upstream contribution opened (OPA) | External PR | 2026-02-18 | https://github.com/open-policy-agent/opa/pull/8343 |
+| Upstream fallback contribution opened (OPA reduced scope) | External PR | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8346 |
 | Upstream contribution opened (OpenSSF Scorecard) | External PR | 2026-02-18 | https://github.com/ossf/scorecard/pull/4942 |
 | Maintainer follow-up posted (Sigstore) | External PR Comment | 2026-02-19 | https://github.com/sigstore/cosign/pull/4710#issuecomment-3927950828 |
 | Maintainer follow-up posted (OPA) | External PR Comment | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8343#issuecomment-3927950855 |
 | Maintainer follow-up posted (Scorecard) | External PR Comment | 2026-02-19 | https://github.com/ossf/scorecard/pull/4942#issuecomment-3927950830 |
 | OPA upstream PR closed (unmerged) | External PR Status | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8343 |
+| OPA fallback PR status (open) | External PR Status | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8346 |
 | Anonymous pilot case study published | Adoption | 2026-02-18 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Third-party technical mention published | Mention | 2026-02-18 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 
@@ -32,9 +34,9 @@
 
 | Metric | Value | Source |
 |---|---:|---|
-| Upstream PRs opened | 3 | `docs/public-footprint/external-contribution-log.md` |
-| Upstream PRs merged | 0 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942 |
-| Upstream PRs in review | 2 | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs opened | 4 | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs merged | 0 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8346, https://github.com/ossf/scorecard/pull/4942 |
+| Upstream PRs in review | 3 | `docs/public-footprint/external-contribution-log.md` |
 | Upstream PRs closed (unmerged) | 1 | https://github.com/open-policy-agent/opa/pull/8343 |
 | Third-party mentions | 1 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous case studies | 1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
@@ -55,7 +57,7 @@
    - `./scripts/generate-evidence-pack.sh`
 2. Current limitations:
    - external merged PR evidence is still pending maintainer approval.
-   - one upstream PR (OPA) is closed and requires a reduced-scope replacement PR for merge conversion.
+   - one upstream PR (OPA #8343) is closed, while reduced-scope replacement PR #8346 is open and awaiting review.
    - current mention is hosted on Gist; canonical non-GitHub publication is still pending.
 3. Reliability hardening in progress:
    - OCI verification and release-asset download steps now include retries and preflight checks in workflow YAML.

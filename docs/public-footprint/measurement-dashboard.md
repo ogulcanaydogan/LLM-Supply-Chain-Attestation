@@ -7,9 +7,9 @@ Day-0 values are captured on **2026-02-18 UTC**.
 
 | Metric | Day 0 | Day 30 Target | Current Delta | Source |
 |---|---:|---:|---:|---|
-| Upstream PRs opened | 0 | >=2 | +3 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942 |
-| Upstream PRs merged | 0 | >=1 | +0 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942 |
-| Upstream PRs in review | 0 | <=2 | +2 | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs opened | 0 | >=2 | +4 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/open-policy-agent/opa/pull/8346, https://github.com/ossf/scorecard/pull/4942 |
+| Upstream PRs merged | 0 | >=1 | +0 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8346, https://github.com/ossf/scorecard/pull/4942 |
+| Upstream PRs in review | 0 | <=2 | +3 | `docs/public-footprint/external-contribution-log.md` |
 | Upstream PRs closed (unmerged) | 0 | <=1 | +1 | https://github.com/open-policy-agent/opa/pull/8343 |
 | Third-party mentions | 0 | >=1 | +1 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous pilot case studies | 0 | >=1 | +1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
@@ -48,6 +48,6 @@ Day-0 values are captured on **2026-02-18 UTC**.
 - CI pass rate source window: 34/41 successful runs (`83%`) across `ci-attest-verify`, `release`, `release-verify`, `public-footprint-weekly`.
 - External mention URL (current primary): https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
 - Upstream PR review stage:
-  - `in-review`: 2
+  - `in-review`: 3
   - `closed`: 1
   - `merged`: 0
