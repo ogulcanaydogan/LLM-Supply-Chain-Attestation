@@ -154,6 +154,20 @@ upstream_pr_in_review = sum(
     if pr.get("state") == "open" and not pr.get("draft") and not pr.get("merged")
 )
 
+watchers_raw = repo.get("watchers")
+watchers = 0
+if isinstance(watchers_raw, dict):
+    watchers = watchers_raw.get("totalCount", 0)
+elif isinstance(watchers_raw, int):
+    watchers = watchers_raw
+if not watchers:
+    watchers = repo.get("subscribers_count", repo.get("watchers_count", 0))
+
+default_branch_ref = repo.get("defaultBranchRef")
+default_branch = repo.get("default_branch")
+if isinstance(default_branch_ref, dict) and default_branch_ref.get("name"):
+    default_branch = default_branch_ref.get("name")
+
 snapshot = {
     "generated_at_utc": now.isoformat(),
     "window_days": 30,
@@ -161,8 +175,8 @@ snapshot = {
     "repo_url": repo.get("url") or repo.get("html_url"),
     "stars": repo.get("stargazerCount", repo.get("stargazers_count", 0)),
     "forks": repo.get("forkCount", repo.get("forks_count", 0)),
-    "watchers": repo.get("watchers", {}).get("totalCount", repo.get("subscribers_count", repo.get("watchers_count", 0))),
-    "default_branch": repo.get("defaultBranchRef", {}).get("name", repo.get("default_branch")),
+    "watchers": watchers,
+    "default_branch": default_branch,
     "release_count": len(releases),
     "release_downloads_total": downloads_total,
     "ci_runs_30d_total": total_30d,
