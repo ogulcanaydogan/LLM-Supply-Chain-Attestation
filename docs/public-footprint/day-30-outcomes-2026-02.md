@@ -19,13 +19,13 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 1. `v1.0.1` release and verification path closed cleanly with signed assets.
 2. Weekly footprint automation now produces snapshot + CI health + generated evidence docs.
-3. Upstream cadence process became explicit and traceable (48h follow-up workflow).
+3. Upstream cadence process became explicit and traceable (48h follow-up workflow), and maintainer-requested revisions were pushed to `cosign#4710`.
 
 ## What Did Not Convert
 
 1. No upstream PR merged yet in-window.
 2. OPA docs contribution line was closed twice (`#8343`, `#8346`) with maintainer guidance to keep this pattern in project docs.
-3. Third-party mention is still gist-based; canonical non-GitHub publication is still pending.
+3. Third-party mention is still gist-based; canonical non-GitHub publication is pending because `DEVTO_API_KEY` is not yet configured.
 
 ## Next Cycle Priorities
 

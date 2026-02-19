@@ -32,7 +32,7 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
 3. Mention accurately reflects scope and limitations.
 4. Mention date is captured in evidence pack.
 
-## Current Status (2026-02-18)
+## Current Status (2026-02-19)
 
 - Publish-ready article draft completed:
   - `docs/public-footprint/third-party-mention-draft-2026-02.md`
@@ -40,6 +40,9 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
   - https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
 - Canonical third-party publication target (primary evidence link) is pending:
   - Dev.to / Medium / newsletter publication URL to be inserted after posting.
+- Dev.to publish automation is ready but currently blocked by missing credential:
+  - `DEVTO_API_KEY` is not set in the execution environment.
+  - command: `PUBLISHED_FLAG=true ./scripts/publish-devto-mention.sh`
 - Evidence pack prepared for post-publication URL insertion:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
 
