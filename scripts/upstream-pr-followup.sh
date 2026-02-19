@@ -33,6 +33,23 @@ gh_api_retry() {
   return 1
 }
 
+extract_upstream_pr_urls() {
+  local source_file="$1"
+  if [[ ! -f "${source_file}" ]]; then
+    return
+  fi
+  grep -Eo 'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[0-9]+' "${source_file}" | sort -u || true
+}
+
+parse_pr_repo_number() {
+  local pr_url="$1"
+  if [[ "${pr_url}" =~ ^https://github\.com/([^/]+)/([^/]+)/pull/([0-9]+)$ ]]; then
+    echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}:${BASH_REMATCH[3]}"
+    return
+  fi
+  echo ""
+}
+
 require_cmd gh
 require_cmd jq
 
@@ -51,12 +68,15 @@ FOLLOWUP_JSON="${OUT_DIR}/upstream-followup.json"
 NOW_EPOCH="$(date -u +%s)"
 FOLLOWUP_INTERVAL_SECONDS=$((48 * 60 * 60))
 FALLBACK_THRESHOLD_SECONDS=$((5 * 24 * 60 * 60))
-
-PRS=(
-  "sigstore/cosign:4710"
-  "open-policy-agent/opa:8343"
-  "ossf/scorecard:4942"
-)
+EXTERNAL_LOG="docs/public-footprint/external-contribution-log.md"
+mapfile -t PRS < <(extract_upstream_pr_urls "${EXTERNAL_LOG}" | while IFS= read -r pr_url; do parse_pr_repo_number "${pr_url}"; done)
+if [[ "${#PRS[@]}" -eq 0 ]]; then
+  PRS=(
+    "sigstore/cosign:4710"
+    "open-policy-agent/opa:8343"
+    "ossf/scorecard:4942"
+  )
+fi
 
 TMP_NDJSON="$(mktemp)"
 trap 'rm -f "${TMP_NDJSON}"' EXIT

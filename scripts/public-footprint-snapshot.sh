@@ -44,6 +44,23 @@ gh_api_retry() {
   return 1
 }
 
+extract_upstream_pr_urls() {
+  local source_file="$1"
+  if [[ ! -f "${source_file}" ]]; then
+    return
+  fi
+  grep -Eo 'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[0-9]+' "${source_file}" | sort -u || true
+}
+
+parse_pr_repo_number() {
+  local pr_url="$1"
+  if [[ "${pr_url}" =~ ^https://github\.com/([^/]+)/([^/]+)/pull/([0-9]+)$ ]]; then
+    echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}:${BASH_REMATCH[3]}"
+    return
+  fi
+  echo ""
+}
+
 if ! gh auth status >/dev/null 2>&1; then
   if [[ -z "${GH_TOKEN:-}" && -z "${GITHUB_TOKEN:-}" ]]; then
     echo "warning: gh is not authenticated; using anonymous API access (rate-limited)." >&2
@@ -66,13 +83,12 @@ TS="$(date -u +"%Y%m%dT%H%M%SZ")"
 OUT_DIR=".llmsa/public-footprint/${TS}"
 mkdir -p "${OUT_DIR}"
 
+EXTERNAL_LOG="docs/public-footprint/external-contribution-log.md"
 REPO_JSON="${OUT_DIR}/repo.json"
 RELEASES_JSON="${OUT_DIR}/releases.json"
 RUNS_JSON="${OUT_DIR}/runs.json"
 PRS_JSON="${OUT_DIR}/prs.json"
-COSIGN_PR_JSON="${OUT_DIR}/upstream-cosign-pr.json"
-OPA_PR_JSON="${OUT_DIR}/upstream-opa-pr.json"
-SCORECARD_PR_JSON="${OUT_DIR}/upstream-scorecard-pr.json"
+UPSTREAM_PRS_JSON="${OUT_DIR}/upstream-prs.json"
 SNAPSHOT_JSON="${OUT_DIR}/snapshot.json"
 SNAPSHOT_MD="${OUT_DIR}/snapshot.md"
 
@@ -82,11 +98,38 @@ gh_api_retry "repos/${REPO}/actions/runs?per_page=100" \
   --jq '[.workflow_runs[] | {conclusion: .conclusion, createdAt: .created_at, name: .name, url: .html_url}]' > "${RUNS_JSON}"
 gh_api_retry "repos/${REPO}/pulls?state=all&per_page=100" \
   --jq '[.[] | {createdAt: .created_at, mergedAt: .merged_at, state: .state, url: .html_url}]' > "${PRS_JSON}"
-gh_api_retry repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
-gh_api_retry repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
-gh_api_retry repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
 
-python3 - "${REPO_JSON}" "${RELEASES_JSON}" "${RUNS_JSON}" "${PRS_JSON}" "${COSIGN_PR_JSON}" "${OPA_PR_JSON}" "${SCORECARD_PR_JSON}" "${SNAPSHOT_JSON}" "${SNAPSHOT_MD}" <<'PY'
+tmp_upstream_prs_ndjson="${OUT_DIR}/upstream-prs.ndjson"
+: > "${tmp_upstream_prs_ndjson}"
+
+mapfile -t upstream_pr_urls < <(extract_upstream_pr_urls "${EXTERNAL_LOG}")
+if [[ "${#upstream_pr_urls[@]}" -eq 0 ]]; then
+  upstream_pr_urls=(
+    "https://github.com/sigstore/cosign/pull/4710"
+    "https://github.com/open-policy-agent/opa/pull/8343"
+    "https://github.com/ossf/scorecard/pull/4942"
+  )
+fi
+
+for pr_url in "${upstream_pr_urls[@]}"; do
+  repo_number="$(parse_pr_repo_number "${pr_url}")"
+  if [[ -z "${repo_number}" ]]; then
+    continue
+  fi
+  pr_repo="${repo_number%%:*}"
+  pr_number="${repo_number##*:}"
+  gh_api_retry "repos/${pr_repo}/pulls/${pr_number}" \
+    --jq '{html_url: .html_url, state: .state, merged: .merged, merged_at: .merged_at, draft: .draft}' \
+    >> "${tmp_upstream_prs_ndjson}"
+done
+
+if [[ -s "${tmp_upstream_prs_ndjson}" ]]; then
+  jq -s '.' "${tmp_upstream_prs_ndjson}" > "${UPSTREAM_PRS_JSON}"
+else
+  echo '[]' > "${UPSTREAM_PRS_JSON}"
+fi
+
+python3 - "${REPO_JSON}" "${RELEASES_JSON}" "${RUNS_JSON}" "${PRS_JSON}" "${UPSTREAM_PRS_JSON}" "${SNAPSHOT_JSON}" "${SNAPSHOT_MD}" <<'PY'
 import json
 import sys
 from datetime import datetime, timedelta, timezone
@@ -96,12 +139,10 @@ from datetime import datetime, timedelta, timezone
     releases_file,
     runs_file,
     prs_file,
-    cosign_pr_file,
-    opa_pr_file,
-    scorecard_pr_file,
+    upstream_prs_file,
     out_json,
     out_md,
-) = sys.argv[1:10]
+) = sys.argv[1:8]
 
 def parse_time(value):
     try:
@@ -116,11 +157,7 @@ repo = json.load(open(repo_file, "r", encoding="utf-8"))
 releases = json.load(open(releases_file, "r", encoding="utf-8"))
 runs = json.load(open(runs_file, "r", encoding="utf-8"))
 prs = json.load(open(prs_file, "r", encoding="utf-8"))
-upstream_prs = [
-    json.load(open(cosign_pr_file, "r", encoding="utf-8")),
-    json.load(open(opa_pr_file, "r", encoding="utf-8")),
-    json.load(open(scorecard_pr_file, "r", encoding="utf-8")),
-]
+upstream_prs = json.load(open(upstream_prs_file, "r", encoding="utf-8"))
 
 downloads_total = 0
 for release in releases:
@@ -152,6 +189,9 @@ upstream_pr_in_review = sum(
     1
     for pr in upstream_prs
     if pr.get("state") == "open" and not pr.get("draft") and not pr.get("merged")
+)
+upstream_pr_closed_unmerged = sum(
+    1 for pr in upstream_prs if pr.get("state") == "closed" and not pr.get("merged")
 )
 
 watchers_raw = repo.get("watchers")
@@ -187,6 +227,8 @@ snapshot = {
     "upstream_pr_open": upstream_pr_open,
     "upstream_pr_merged": upstream_pr_merged,
     "in_review_count": upstream_pr_in_review,
+    "upstream_pr_closed_unmerged": upstream_pr_closed_unmerged,
+    "upstream_pr_urls": [pr.get("html_url") for pr in upstream_prs if pr.get("html_url")],
 }
 
 with open(out_json, "w", encoding="utf-8") as f:
@@ -214,6 +256,7 @@ lines = [
     f"| Upstream PRs open | {snapshot['upstream_pr_open']} |",
     f"| Upstream PRs merged | {snapshot['upstream_pr_merged']} |",
     f"| Upstream PRs in review | {snapshot['in_review_count']} |",
+    f"| Upstream PRs closed (unmerged) | {snapshot['upstream_pr_closed_unmerged']} |",
 ]
 
 with open(out_md, "w", encoding="utf-8") as f:

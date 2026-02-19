@@ -66,6 +66,23 @@ gh_api_retry() {
   return 1
 }
 
+extract_upstream_pr_urls() {
+  local source_file="$1"
+  if [[ ! -f "${source_file}" ]]; then
+    return
+  fi
+  grep -Eo 'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/pull/[0-9]+' "${source_file}" | sort -u || true
+}
+
+parse_pr_repo_number() {
+  local pr_url="$1"
+  if [[ "${pr_url}" =~ ^https://github\.com/([^/]+)/([^/]+)/pull/([0-9]+)$ ]]; then
+    echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}:${BASH_REMATCH[3]}"
+    return
+  fi
+  echo ""
+}
+
 require_cmd gh
 require_cmd jq
 
@@ -136,36 +153,109 @@ fi
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
 
-COSIGN_PR_JSON="${TMP_DIR}/cosign-pr.json"
-OPA_PR_JSON="${TMP_DIR}/opa-pr.json"
-SCORECARD_PR_JSON="${TMP_DIR}/scorecard-pr.json"
-
-gh_api_retry repos/sigstore/cosign/pulls/4710 > "${COSIGN_PR_JSON}"
-gh_api_retry repos/open-policy-agent/opa/pulls/8343 > "${OPA_PR_JSON}"
-gh_api_retry repos/ossf/scorecard/pulls/4942 > "${SCORECARD_PR_JSON}"
-
 UPSTREAM_STATES_JSON="${TMP_DIR}/upstream-pr-states.json"
-jq -s '
-  [
-    .[] | {
-      url: .html_url,
-      title: .title,
-      state: .state,
-      merged: .merged,
-      merged_at: .merged_at,
-      updated_at: .updated_at
-    }
-  ]
-' "${COSIGN_PR_JSON}" "${OPA_PR_JSON}" "${SCORECARD_PR_JSON}" > "${UPSTREAM_STATES_JSON}"
+UPSTREAM_TMP_NDJSON="${TMP_DIR}/upstream-pr-states.ndjson"
+: > "${UPSTREAM_TMP_NDJSON}"
+
+mapfile -t UPSTREAM_PR_URLS < <(extract_upstream_pr_urls "${EXTERNAL_LOG}")
+if [[ "${#UPSTREAM_PR_URLS[@]}" -eq 0 ]]; then
+  UPSTREAM_PR_URLS=(
+    "https://github.com/sigstore/cosign/pull/4710"
+    "https://github.com/open-policy-agent/opa/pull/8343"
+    "https://github.com/ossf/scorecard/pull/4942"
+  )
+fi
+
+for pr_url in "${UPSTREAM_PR_URLS[@]}"; do
+  repo_number="$(parse_pr_repo_number "${pr_url}")"
+  if [[ -z "${repo_number}" ]]; then
+    continue
+  fi
+  pr_repo="${repo_number%%:*}"
+  pr_number="${repo_number##*:}"
+  pr_json_file="${TMP_DIR}/pr-${pr_repo//\//-}-${pr_number}.json"
+  gh_api_retry "repos/${pr_repo}/pulls/${pr_number}" > "${pr_json_file}"
+  jq -c '{
+    url: .html_url,
+    title: .title,
+    state: .state,
+    merged: .merged,
+    merged_at: .merged_at,
+    updated_at: .updated_at
+  }' "${pr_json_file}" >> "${UPSTREAM_TMP_NDJSON}"
+done
+
+if [[ -s "${UPSTREAM_TMP_NDJSON}" ]]; then
+  jq -s '.' "${UPSTREAM_TMP_NDJSON}" > "${UPSTREAM_STATES_JSON}"
+else
+  echo '[]' > "${UPSTREAM_STATES_JSON}"
+fi
 
 UPSTREAM_OPENED_COUNT="$(jq -r 'length' "${UPSTREAM_STATES_JSON}")"
 UPSTREAM_MERGED_COUNT="$(jq -r '[.[] | select(.merged == true)] | length' "${UPSTREAM_STATES_JSON}")"
 UPSTREAM_OPEN_COUNT="$(jq -r '[.[] | select(.state == "open")] | length' "${UPSTREAM_STATES_JSON}")"
 UPSTREAM_IN_REVIEW_COUNT="${UPSTREAM_OPEN_COUNT}"
+UPSTREAM_CLOSED_UNMERGED_COUNT="$(jq -r '[.[] | select(.state == "closed" and .merged != true)] | length' "${UPSTREAM_STATES_JSON}")"
 
 THIRD_PARTY_MENTION_URL="${THIRD_PARTY_MENTION_URL:-https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb}"
 THIRD_PARTY_MENTION_COUNT=1
 CASE_STUDY_COUNT=1
+
+LATEST_RELEASE_TAG="v1.0.0"
+LATEST_RELEASE_URL="${REPO_URL}/releases/tag/${LATEST_RELEASE_TAG}"
+LATEST_RELEASE_DATE="2026-02-18"
+LATEST_RELEASE_JSON="${TMP_DIR}/latest-release.json"
+if gh_api_retry "repos/${REPO}/releases/latest" > "${LATEST_RELEASE_JSON}" 2>/dev/null; then
+  latest_tag="$(jq -r '.tag_name // empty' "${LATEST_RELEASE_JSON}")"
+  latest_url="$(jq -r '.html_url // empty' "${LATEST_RELEASE_JSON}")"
+  latest_date="$(jq -r '(.published_at // .created_at // "")[0:10]' "${LATEST_RELEASE_JSON}")"
+  if [[ -n "${latest_tag}" ]]; then
+    LATEST_RELEASE_TAG="${latest_tag}"
+  fi
+  if [[ -n "${latest_url}" ]]; then
+    LATEST_RELEASE_URL="${latest_url}"
+  fi
+  if [[ -n "${latest_date}" ]]; then
+    LATEST_RELEASE_DATE="${latest_date}"
+  fi
+fi
+
+WORKFLOW_RUNS_JSON="${TMP_DIR}/workflow-runs.json"
+gh_api_retry "repos/${REPO}/actions/runs?per_page=100" > "${WORKFLOW_RUNS_JSON}"
+
+LATEST_CI_RUN_URL="$(jq -r '[.workflow_runs[] | select(.name == "ci-attest-verify" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | .html_url // empty' "${WORKFLOW_RUNS_JSON}")"
+LATEST_CI_RUN_DATE="$(jq -r '[.workflow_runs[] | select(.name == "ci-attest-verify" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | (.created_at // "")[0:10]' "${WORKFLOW_RUNS_JSON}")"
+LATEST_PUBLIC_FOOTPRINT_RUN_URL="$(jq -r '[.workflow_runs[] | select(.name == "public-footprint-weekly" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | .html_url // empty' "${WORKFLOW_RUNS_JSON}")"
+LATEST_PUBLIC_FOOTPRINT_RUN_DATE="$(jq -r '[.workflow_runs[] | select(.name == "public-footprint-weekly" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | (.created_at // "")[0:10]' "${WORKFLOW_RUNS_JSON}")"
+LATEST_RELEASE_RUN_URL="$(jq -r '[.workflow_runs[] | select(.name == "release" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | .html_url // empty' "${WORKFLOW_RUNS_JSON}")"
+LATEST_RELEASE_RUN_DATE="$(jq -r '[.workflow_runs[] | select(.name == "release" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | (.created_at // "")[0:10]' "${WORKFLOW_RUNS_JSON}")"
+LATEST_RELEASE_VERIFY_RUN_URL="$(jq -r '[.workflow_runs[] | select(.name == "release-verify" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | .html_url // empty' "${WORKFLOW_RUNS_JSON}")"
+LATEST_RELEASE_VERIFY_RUN_DATE="$(jq -r '[.workflow_runs[] | select(.name == "release-verify" and .status == "completed" and .conclusion == "success")] | sort_by(.created_at) | last | (.created_at // "")[0:10]' "${WORKFLOW_RUNS_JSON}")"
+
+if [[ -z "${LATEST_CI_RUN_URL}" ]]; then
+  LATEST_CI_RUN_URL="${REPO_URL}/actions/workflows/ci-attest-verify.yml"
+fi
+if [[ -z "${LATEST_PUBLIC_FOOTPRINT_RUN_URL}" ]]; then
+  LATEST_PUBLIC_FOOTPRINT_RUN_URL="${REPO_URL}/actions/workflows/public-footprint-weekly.yml"
+fi
+if [[ -z "${LATEST_CI_RUN_DATE}" ]]; then
+  LATEST_CI_RUN_DATE="${TODAY_UTC}"
+fi
+if [[ -z "${LATEST_PUBLIC_FOOTPRINT_RUN_DATE}" ]]; then
+  LATEST_PUBLIC_FOOTPRINT_RUN_DATE="${TODAY_UTC}"
+fi
+if [[ -z "${LATEST_RELEASE_RUN_URL}" ]]; then
+  LATEST_RELEASE_RUN_URL="${REPO_URL}/actions/workflows/release.yml"
+fi
+if [[ -z "${LATEST_RELEASE_VERIFY_RUN_URL}" ]]; then
+  LATEST_RELEASE_VERIFY_RUN_URL="${REPO_URL}/actions/workflows/release-verify.yml"
+fi
+if [[ -z "${LATEST_RELEASE_RUN_DATE}" ]]; then
+  LATEST_RELEASE_RUN_DATE="${LATEST_RELEASE_DATE}"
+fi
+if [[ -z "${LATEST_RELEASE_VERIFY_RUN_DATE}" ]]; then
+  LATEST_RELEASE_VERIFY_RUN_DATE="${LATEST_RELEASE_DATE}"
+fi
 
 STARS="$(jq -r '.stars // 0' "${SNAPSHOT_JSON}")"
 FORKS="$(jq -r '.forks // 0' "${SNAPSHOT_JSON}")"
@@ -194,7 +284,7 @@ if [[ -z "${VERIFY_P95}" ]]; then
   VERIFY_P95="n/a"
 fi
 
-UPSTREAM_SOURCE="https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942"
+UPSTREAM_SOURCE="$(jq -r '[.[].url] | join(", ")' "${UPSTREAM_STATES_JSON}")"
 SNAPSHOT_SOURCE="${SNAPSHOT_JSON}"
 CI_SOURCE="${CI_HEALTH_JSON}"
 TAMPER_SOURCE="${TAMPER_RESULTS_JSON}"
@@ -204,6 +294,7 @@ MENTION_SOURCE="${THIRD_PARTY_MENTION_URL}"
 
 require_source "Upstream PRs opened" "${UPSTREAM_SOURCE}"
 require_source "Upstream PRs merged" "${UPSTREAM_SOURCE}"
+require_source "Upstream PRs closed (unmerged)" "${UPSTREAM_SOURCE}"
 require_source "Third-party mentions" "${MENTION_SOURCE}"
 require_source "Anonymous pilot case studies" "${CASE_STUDY_SOURCE}"
 require_source "Stars/Forks/Watchers" "${SNAPSHOT_SOURCE}"
@@ -224,6 +315,8 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "|---|---:|---:|---:|---|"
   echo "| Upstream PRs opened | 0 | >=2 | +${UPSTREAM_OPENED_COUNT} | ${UPSTREAM_SOURCE} |"
   echo "| Upstream PRs merged | 0 | >=1 | +${UPSTREAM_MERGED_COUNT} | ${UPSTREAM_SOURCE} |"
+  echo "| Upstream PRs in review | 0 | <=2 | +${UPSTREAM_IN_REVIEW_COUNT} | ${UPSTREAM_SOURCE} |"
+  echo "| Upstream PRs closed (unmerged) | 0 | <=1 | +${UPSTREAM_CLOSED_UNMERGED_COUNT} | ${UPSTREAM_SOURCE} |"
   echo "| Third-party mentions | 0 | >=1 | +${THIRD_PARTY_MENTION_COUNT} | ${MENTION_SOURCE} |"
   echo "| Anonymous pilot case studies | 0 | >=1 | +${CASE_STUDY_COUNT} | \`${CASE_STUDY_SOURCE}\` |"
   echo "| GitHub stars | 0 | >=25 | ${STARS} | \`${SNAPSHOT_SOURCE}\` |"
@@ -240,6 +333,7 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "- External write-up URL: ${THIRD_PARTY_MENTION_URL}"
   echo "- Upstream PR review stage:"
   echo "  - \`in-review\`: ${UPSTREAM_IN_REVIEW_COUNT}"
+  echo "  - \`closed\`: ${UPSTREAM_CLOSED_UNMERGED_COUNT}"
   echo "  - \`merged\`: ${UPSTREAM_MERGED_COUNT}"
   echo "- Dashboard generated at: \`${GENERATED_AT_UTC}\`"
 } > "${MEASUREMENT_DASHBOARD}"
@@ -258,13 +352,25 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo
   echo "| Claim | Evidence Type | Date (UTC) | Public URL |"
   echo "|---|---|---|---|"
-  echo "| Release shipped with signed artifacts | Release | 2026-02-18 | ${REPO_URL}/releases/tag/v1.0.0 |"
-  echo "| CI attestation gate enforced and passing | Workflow | 2026-02-18 | ${REPO_URL}/actions/workflows/ci-attest-verify.yml |"
-  echo "| Public-footprint snapshot workflow executed | Workflow | ${TODAY_UTC} | ${REPO_URL}/actions/workflows/public-footprint-weekly.yml |"
+  echo "| Release shipped with signed artifacts | Release | ${LATEST_RELEASE_DATE} | ${LATEST_RELEASE_URL} |"
+  echo "| Release workflow completed successfully | Workflow | ${LATEST_RELEASE_RUN_DATE} | ${LATEST_RELEASE_RUN_URL} |"
+  echo "| Release verification completed successfully | Workflow | ${LATEST_RELEASE_VERIFY_RUN_DATE} | ${LATEST_RELEASE_VERIFY_RUN_URL} |"
+  echo "| CI attestation gate enforced and passing | Workflow | ${LATEST_CI_RUN_DATE} | ${LATEST_CI_RUN_URL} |"
+  echo "| Public-footprint snapshot workflow executed | Workflow | ${LATEST_PUBLIC_FOOTPRINT_RUN_DATE} | ${LATEST_PUBLIC_FOOTPRINT_RUN_URL} |"
   echo "| Tamper test suite executed (20 cases) | Benchmark/Security | ${TODAY_UTC} | repository artifact path: \`${TAMPER_SOURCE}\` |"
-  echo "| Upstream contribution opened (Sigstore) | External PR | 2026-02-18 | https://github.com/sigstore/cosign/pull/4710 |"
-  echo "| Upstream contribution opened (OPA) | External PR | 2026-02-18 | https://github.com/open-policy-agent/opa/pull/8343 |"
-  echo "| Upstream contribution opened (OpenSSF Scorecard) | External PR | 2026-02-18 | https://github.com/ossf/scorecard/pull/4942 |"
+  while IFS= read -r row; do
+    pr_url="$(echo "${row}" | cut -d'|' -f1)"
+    pr_state="$(echo "${row}" | cut -d'|' -f2)"
+    pr_updated="$(echo "${row}" | cut -d'|' -f3)"
+    pr_date="${pr_updated:0:10}"
+    if [[ "${pr_state}" == "open" ]]; then
+      echo "| Upstream contribution in review | External PR | ${pr_date} | ${pr_url} |"
+    elif [[ "${pr_state}" == "closed" ]]; then
+      echo "| Upstream contribution closed (unmerged) | External PR | ${pr_date} | ${pr_url} |"
+    else
+      echo "| Upstream contribution status tracked | External PR | ${pr_date} | ${pr_url} |"
+    fi
+  done < <(jq -r '.[] | "\(.url)|\(.state)|\(.updated_at // "")"' "${UPSTREAM_STATES_JSON}")
   echo "| Anonymous pilot case study published | Adoption | 2026-02-18 | \`${CASE_STUDY_SOURCE}\` |"
   echo "| Third-party technical mention published | Mention | 2026-02-18 | ${THIRD_PARTY_MENTION_URL} |"
   echo
@@ -275,6 +381,7 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "| Upstream PRs opened | ${UPSTREAM_OPENED_COUNT} | ${UPSTREAM_SOURCE} |"
   echo "| Upstream PRs merged | ${UPSTREAM_MERGED_COUNT} | ${UPSTREAM_SOURCE} |"
   echo "| Upstream PRs in review | ${UPSTREAM_IN_REVIEW_COUNT} | ${UPSTREAM_SOURCE} |"
+  echo "| Upstream PRs closed (unmerged) | ${UPSTREAM_CLOSED_UNMERGED_COUNT} | ${UPSTREAM_SOURCE} |"
   echo "| Third-party mentions | ${THIRD_PARTY_MENTION_COUNT} | ${MENTION_SOURCE} |"
   echo "| Anonymous case studies | ${CASE_STUDY_COUNT} | \`${CASE_STUDY_SOURCE}\` |"
   echo "| Stars / forks / watchers | ${STARS} / ${FORKS} / ${WATCHERS} | \`${SNAPSHOT_SOURCE}\` |"
@@ -302,6 +409,7 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "   - GitHub Actions + local benchmark/tamper outputs."
   echo "3. Limitations:"
   echo "   - merged-status external validation is still pending maintainer approval on open upstream PRs."
+  echo "   - ${UPSTREAM_CLOSED_UNMERGED_COUNT} upstream PR(s) are closed-unmerged and count as non-converted evidence."
   echo
   echo "## Non-Claims Statement"
   echo
