@@ -9,14 +9,15 @@ Day-0 values are captured on **2026-02-18 UTC**.
 |---|---:|---:|---:|---|
 | Upstream PRs opened | 0 | >=2 | +3 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942 |
 | Upstream PRs merged | 0 | >=1 | +0 | https://github.com/sigstore/cosign/pull/4710, https://github.com/open-policy-agent/opa/pull/8343, https://github.com/ossf/scorecard/pull/4942 |
-| Upstream PRs in review | 0 | <=2 | +3 | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs in review | 0 | <=2 | +2 | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs closed (unmerged) | 0 | <=1 | +1 | https://github.com/open-policy-agent/opa/pull/8343 |
 | Third-party mentions | 0 | >=1 | +1 | https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb |
 | Anonymous pilot case studies | 0 | >=1 | +1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | GitHub stars | 0 | >=25 | +0 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
 | GitHub forks | 0 | >=5 | +0 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
 | GitHub watchers | 0 | >=5 | +0 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
 | Release downloads (cumulative) | 184 | >=400 | +0 | `.llmsa/public-footprint/20260218T205404Z/snapshot.json` |
-| CI pass rate (last 30 days) | 93.3% | >=95% | 89.47% | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22172837380 |
+| CI pass rate (last 30 days) | 93.3% | >=95% | 83% (34/41) | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189686718 |
 
 ## Reliability Focus (Current)
 
@@ -28,6 +29,9 @@ Day-0 values are captured on **2026-02-18 UTC**.
   - preflight checks for required files/tokens,
   - retries on publish/download/OCI verification steps,
   - explicit job timeouts and concurrency control.
+- Current status:
+  - latest `ci-attest-verify` runs are passing after reliability fixes,
+  - three earlier `public-footprint-weekly` failures remain in the rolling 30-day denominator.
 
 ## Automation Commands
 
@@ -38,11 +42,12 @@ Day-0 values are captured on **2026-02-18 UTC**.
 ./scripts/upstream-pr-followup.sh
 ```
 
-## Current Snapshot (2026-02-19 UTC)
+## Current Snapshot (2026-02-19 UTC, post v1.0.1)
 
-- Snapshot artifact (local): `.llmsa/public-footprint/20260218T205404Z/snapshot.md`
-- CI pass rate source window: 17/19 successful runs (`89.47%`).
+- Latest successful public-footprint workflow: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189686718
+- CI pass rate source window: 34/41 successful runs (`83%`) across `ci-attest-verify`, `release`, `release-verify`, `public-footprint-weekly`.
 - External mention URL (current primary): https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
 - Upstream PR review stage:
-  - `in-review`: 3
+  - `in-review`: 2
+  - `closed`: 1
   - `merged`: 0
