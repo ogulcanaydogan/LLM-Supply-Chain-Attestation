@@ -27,7 +27,7 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 1. No upstream PR merged yet in-window.
 2. OPA docs contribution line was closed twice (`#8343`, `#8346`) with maintainer guidance to keep this pattern in project docs.
-3. Third-party mention is still gist-based; canonical non-GitHub publication is pending because `DEVTO_API_KEY` is not yet configured.
+3. Third-party mention is still gist-based; canonical non-GitHub publication is pending because `DEVTO_API_KEY` is not yet configured (see failed secret preflight run: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22200503946).
 
 ## Next Cycle Priorities
 

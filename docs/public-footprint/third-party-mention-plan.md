@@ -45,6 +45,8 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
   - command: `PUBLISHED_FLAG=true ./scripts/publish-devto-mention.sh`
   - workflow option: `.github/workflows/publish-third-party-mention.yml` (`workflow_dispatch`)
   - prerequisite: set repository secret `DEVTO_API_KEY`
+  - latest validation run failed exactly at secret preflight:
+    - https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22200503946
 - Evidence pack prepared for post-publication URL insertion:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
 
