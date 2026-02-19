@@ -52,6 +52,29 @@ Performance benchmarks for signing, verification, and policy evaluation:
 ./scripts/benchmark.sh
 ```
 
+### E2E Integration Tests
+
+Full pipeline tests covering attestation creation, signing, verification, and webhook admission:
+
+```bash
+go test -tags=e2e -v ./test/e2e/
+```
+
+### Coverage Targets
+
+Current package coverage targets:
+
+| Package | Target |
+|---------|--------|
+| `internal/verify` | >= 85% |
+| `internal/sign` | >= 75% |
+| `internal/attest` | >= 80% |
+| `internal/store` | >= 80% |
+| `internal/policy/yaml` | >= 90% |
+| `internal/policy/rego` | >= 90% |
+| `pkg/schema` | 100% |
+| `pkg/types` | 100% |
+
 ## Code Style
 
 - Format code with `gofmt` before committing.
@@ -87,6 +110,26 @@ To add a new attestation type (for example, `deployment_attestation`):
 6. **Write tests** in `internal/attest/collectors_deployment_test.go` covering happy path, missing required fields, and optional fields.
 7. **Add an example config** in `examples/tiny-rag/configs/`.
 8. **Update documentation**: README attestation type table, CHANGELOG.
+
+## Architecture Decision Records
+
+Key design decisions are documented as ADRs in [`docs/adr/`](docs/adr/):
+
+| ADR | Title |
+|-----|-------|
+| [0001](docs/adr/0001-llm-specific-attestation-taxonomy.md) | LLM-Specific Attestation Taxonomy |
+| [0002](docs/adr/0002-dsse-envelope-format.md) | DSSE Envelope Format |
+| [0003](docs/adr/0003-dual-policy-engine.md) | Dual Policy Engine (YAML + Rego) |
+| [0004](docs/adr/0004-privacy-modes.md) | Privacy Modes |
+| [0005](docs/adr/0005-provenance-chain-dag.md) | Provenance Chain DAG |
+| [0006](docs/adr/0006-sigstore-keyless-signing.md) | Sigstore Keyless Signing |
+| [0007](docs/adr/0007-semantic-exit-codes.md) | Semantic Exit Codes |
+
+When proposing architectural changes, create a new ADR following the template:
+- **Status**: Proposed → Accepted/Rejected/Superseded
+- **Context**: What problem are we solving?
+- **Decision**: What did we decide and why?
+- **Consequences**: What are the trade-offs?
 
 ## Submitting Pull Requests
 

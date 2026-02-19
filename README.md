@@ -435,6 +435,8 @@ docs/
 - [Policy Guide](docs/policy-guide.md) — Gate configuration, privacy guards, and Rego integration.
 - [Benchmark Methodology](docs/benchmark-methodology.md) — Determinism, tamper detection, and performance benchmarks.
 - [Kubernetes Admission](docs/k8s-admission.md) — Validating webhook deployment, configuration, and troubleshooting.
+- [API Reference](docs/api-reference.md) — Exported types, functions, and interfaces across all packages.
+- [Architecture Decision Records](docs/adr/) — Key design decisions with context, rationale, and consequences.
 - [Public Footprint Playbook](docs/public-footprint/README.md) — 30-day external validation execution plan and evidence templates.
 - [Positioning Message](docs/public-footprint/positioning.md) — single technical narrative for external communication consistency.
 - [Evidence Baseline](docs/public-footprint/evidence-baseline.md) — Day-0 public signal inventory and gap analysis.

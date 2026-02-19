@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-02-19
+
+### Added
+- Architecture Decision Records (ADRs) covering 7 key design decisions: LLM-specific taxonomy, DSSE envelope format, dual policy engine, privacy modes, provenance chain DAG, Sigstore keyless signing, and semantic exit codes.
+- API reference documentation (`docs/api-reference.md`) covering all exported types, functions, and interfaces.
+- Coverage targets and E2E test instructions in CONTRIBUTING.md.
+- Test coverage push: sign (77.3%), store (84.5%), verify (86.9%), attest (83.6%), rego (94.3%).
+
 ## [1.0.0] - 2026-02-19
 
 ### Added
