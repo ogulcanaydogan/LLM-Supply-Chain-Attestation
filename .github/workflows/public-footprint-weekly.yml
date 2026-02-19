@@ -49,6 +49,11 @@ jobs:
           chmod +x scripts/generate-evidence-pack.sh
           ./scripts/generate-evidence-pack.sh "${GITHUB_REPOSITORY}"
 
+      - name: Generate roadmap completion check
+        run: |
+          chmod +x scripts/roadmap-completion-check.sh
+          ./scripts/roadmap-completion-check.sh
+
       - name: Upload snapshot artifacts
         uses: actions/upload-artifact@v4
         with:

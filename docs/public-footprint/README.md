@@ -33,6 +33,7 @@ The goal is to convert strong internal engineering quality into externally verif
 - `roadmap-status-2026-02.md`: current roadmap-completion status and endgame gates.
 - `external-contribution-log.md`: tracker for opened/merged external PRs.
 - `v1.0.1-hardening-closure.md`: hardening completion checklist and linked evidence.
+- `third-party-mention-canonical-url.txt` (optional): one-line canonical mention URL (non-GitHub) consumed by roadmap completion checks.
 
 ## Operating Rhythm
 
@@ -41,3 +42,4 @@ The goal is to convert strong internal engineering quality into externally verif
 3. Keep all public claims linked to public URLs (release, workflow, PR, post, talk).
 4. Keep non-claims updated when scope changes.
 5. Publish canonical third-party mention via `.github/workflows/publish-third-party-mention.yml` once `DEVTO_API_KEY` secret is configured.
+6. Run `scripts/roadmap-completion-check.sh` to determine strict/practical roadmap completion and current blockers.

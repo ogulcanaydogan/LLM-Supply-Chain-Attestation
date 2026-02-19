@@ -376,16 +376,19 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   while IFS= read -r row; do
     pr_url="$(echo "${row}" | cut -d'|' -f1)"
     pr_state="$(echo "${row}" | cut -d'|' -f2)"
-    pr_updated="$(echo "${row}" | cut -d'|' -f3)"
+    pr_merged="$(echo "${row}" | cut -d'|' -f3)"
+    pr_updated="$(echo "${row}" | cut -d'|' -f4)"
     pr_date="${pr_updated:0:10}"
-    if [[ "${pr_state}" == "open" ]]; then
+    if [[ "${pr_merged}" == "true" ]]; then
+      echo "| Upstream contribution merged | External PR | ${pr_date} | ${pr_url} |"
+    elif [[ "${pr_state}" == "open" ]]; then
       echo "| Upstream contribution in review | External PR | ${pr_date} | ${pr_url} |"
     elif [[ "${pr_state}" == "closed" ]]; then
       echo "| Upstream contribution closed (unmerged) | External PR | ${pr_date} | ${pr_url} |"
     else
       echo "| Upstream contribution status tracked | External PR | ${pr_date} | ${pr_url} |"
     fi
-  done < <(jq -r '.[] | "\(.url)|\(.state)|\(.updated_at // "")"' "${UPSTREAM_STATES_JSON}")
+  done < <(jq -r '.[] | "\(.url)|\(.state)|\(.merged)|\(.updated_at // "")"' "${UPSTREAM_STATES_JSON}")
   echo "| Anonymous pilot case study published | Adoption | 2026-02-18 | \`${CASE_STUDY_SOURCE}\` |"
   echo "| Third-party technical mention published | Mention | 2026-02-18 | ${THIRD_PARTY_MENTION_URL} |"
   echo
@@ -424,7 +427,7 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
   echo "2. Environment notes:"
   echo "   - GitHub Actions + local benchmark/tamper outputs."
   echo "3. Limitations:"
-  echo "   - merged-status external validation is still pending maintainer approval on open upstream PRs."
+  echo "   - ${UPSTREAM_MERGED_COUNT} upstream PR(s) are merged; ${UPSTREAM_OPEN_COUNT} PR(s) remain open and pending maintainer decision."
   echo "   - ${UPSTREAM_CLOSED_UNMERGED_COUNT} upstream PR(s) are closed-unmerged and count as non-converted evidence."
   echo
   echo "## Non-Claims Statement"
