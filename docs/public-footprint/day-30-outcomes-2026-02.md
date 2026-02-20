@@ -13,8 +13,8 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 | Third-party mention count | >=1 | 5 (canonical Dev.to + additional publications) | achieved | `docs/public-footprint/evidence-pack-2026-02-18.md` |
 | Anonymous pilot case study | >=1 | 1 | achieved | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Hardening release closure | v1.0.1 complete evidence | complete | achieved | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
-| CI pass-rate (rolling 30-day) | >=95% | 89.06% (57/64) | not met | `.llmsa/public-footprint/20260220T080446Z/ci-health.json` |
-| CI pass-rate (post-hardening baseline) | >=95% | 100% (24/24) | achieved | `.llmsa/public-footprint/20260220T080446Z/ci-health.json` |
+| CI pass-rate (rolling 30-day) | >=95% | 89.39% (59/66) | not met | `.llmsa/public-footprint/20260220T080850Z/ci-health.json` |
+| CI pass-rate (post-hardening baseline) | >=95% | 100% (26/26) | achieved | `.llmsa/public-footprint/20260220T080850Z/ci-health.json` |
 
 ## What Worked
 
