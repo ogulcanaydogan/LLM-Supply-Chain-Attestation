@@ -2,11 +2,13 @@ package store
 
 import (
 	"fmt"
-	"net/http/httptest"
+	"net"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-containerregistry/pkg/registry"
 )
@@ -16,10 +18,39 @@ import (
 func startRegistry(t *testing.T) string {
 	t.Helper()
 	handler := registry.New()
-	srv := httptest.NewServer(handler)
-	t.Cleanup(srv.Close)
+
+	// Force IPv4 listener to avoid environments where IPv6 loopback is unavailable.
+	ln, err := net.Listen("tcp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen tcp4 registry: %v", err)
+	}
+	srv := &http.Server{Handler: handler}
+	go func() {
+		_ = srv.Serve(ln)
+	}()
+	t.Cleanup(func() {
+		_ = srv.Close()
+		_ = ln.Close()
+	})
+
+	baseURL := "http://" + ln.Addr().String()
+	// Ensure the in-memory registry is accepting requests before tests publish/pull.
+	var readyErr error
+	for i := 0; i < 20; i++ {
+		resp, err := http.Get(baseURL + "/v2/")
+		if err == nil {
+			_ = resp.Body.Close()
+			readyErr = nil
+			break
+		}
+		readyErr = err
+		time.Sleep(10 * time.Millisecond)
+	}
+	if readyErr != nil {
+		t.Fatalf("registry readiness probe failed: %v", readyErr)
+	}
 	// Strip the "http://" scheme — go-containerregistry expects host:port.
-	return strings.TrimPrefix(srv.URL, "http://")
+	return strings.TrimPrefix(baseURL, "http://")
 }
 
 func TestPublishOCI_Success(t *testing.T) {
