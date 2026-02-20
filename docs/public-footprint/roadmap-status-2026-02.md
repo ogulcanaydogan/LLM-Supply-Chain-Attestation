@@ -17,7 +17,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `1` open (`scorecard#4942`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `92.22% (83/90)`; post-hardening `98.11% (52/53)` | partially complete |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `92.22% (83/90)`; post-hardening `98.15% (53/54)` | partially complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
