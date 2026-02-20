@@ -5,7 +5,7 @@
 - Name: `LLM-Supply-Chain-Attestation (llmsa)`
 - Repository: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation
 - Reporting window: 2026-02-18 to 2026-03-19 (UTC, rolling 30-day execution window)
-- Generated at (UTC): `2026-02-20T10:15:15Z`
+- Generated at (UTC): `2026-02-20T10:18:20Z`
 
 ## Evidence Summary
 
@@ -14,7 +14,7 @@
 | Release shipped with signed artifacts | Release | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/releases/tag/v1.0.1 |
 | Release workflow completed successfully | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
 | Release verification completed successfully | Workflow | 2026-02-19 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22201007496 |
-| CI attestation gate enforced and passing | Workflow | 2026-02-20 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22220057509 |
+| CI attestation gate enforced and passing | Workflow | 2026-02-20 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22220162999 |
 | Public-footprint snapshot workflow executed | Workflow | 2026-02-20 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22216256815 |
 | Tamper test suite executed (20 cases) | Benchmark/Security | 2026-02-20 | repository artifact path: `.llmsa/tamper/results.json` |
 | Upstream contribution closed (unmerged) | External PR | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8343 |
@@ -38,10 +38,10 @@
 | Upstream PRs closed (unmerged) | 2 | https://github.com/open-policy-agent/opa/pull/8343, https://github.com/open-policy-agent/opa/pull/8346, https://github.com/ossf/scorecard/pull/4942, https://github.com/sigstore/cosign/pull/4710 |
 | Third-party mentions | 5 | https://dev.to/ogulcanaydogan/i-spent-3-months-solving-a-security-gap-nobody-talks-about-llm-artifact-integrity-6co |
 | Anonymous case studies | 1 | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
-| Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260220T101459Z/snapshot.json` |
-| Release downloads (cumulative) | 324 | `.llmsa/public-footprint/20260220T101459Z/snapshot.json` |
-| CI pass rate (last 30 days) | 90.59% (77/85) | `.llmsa/public-footprint/20260220T101459Z/ci-health.json` |
-| CI pass rate (post-hardening window) | 97.78% (44/45) | `.llmsa/public-footprint/20260220T101459Z/ci-health.json` |
+| Stars / forks / watchers | 0 / 0 / 0 | `.llmsa/public-footprint/20260220T101806Z/snapshot.json` |
+| Release downloads (cumulative) | 324 | `.llmsa/public-footprint/20260220T101806Z/snapshot.json` |
+| CI pass rate (last 30 days) | 90.7% (78/86) | `.llmsa/public-footprint/20260220T101806Z/ci-health.json` |
+| CI pass rate (post-hardening window) | 97.83% (45/46) | `.llmsa/public-footprint/20260220T101806Z/ci-health.json` |
 | Tamper detection success rate | 100.00% (20/20) | `.llmsa/tamper/results.json` |
 | Verify p95 (100 statements) | 27.0 ms | `.llmsa/benchmarks/20260219T214353Z/summary.md` |
 
