@@ -36,6 +36,11 @@ jobs:
           chmod +x scripts/ci-health-snapshot.sh
           ./scripts/ci-health-snapshot.sh "${GITHUB_REPOSITORY}"
 
+      - name: Run CI pass-rate forecast
+        run: |
+          chmod +x scripts/ci-passrate-forecast.sh
+          ./scripts/ci-passrate-forecast.sh
+
       - name: Run tamper and benchmark evidence
         run: |
           chmod +x scripts/tamper-tests.sh scripts/benchmark.sh

@@ -32,22 +32,25 @@ Secure at least one external technical mention that links to `llmsa` evidence ar
 3. Mention accurately reflects scope and limitations.
 4. Mention date is captured in evidence pack.
 
-## Current Status (2026-02-19)
+## Current Status (2026-02-20) — PUBLISHED + NORMALIZED
 
-- Publish-ready article draft completed:
-  - `docs/public-footprint/third-party-mention-draft-2026-02.md`
-- External technical write-up currently published as interim mirror:
+- **LLMSA technical article published on Dev.to** (2026-02-19):
+  - https://dev.to/ogulcanaydogan/i-spent-3-months-solving-a-security-gap-nobody-talks-about-llm-artifact-integrity-6co
+  - Article ID: 3269328
+  - Tags: security, golang, kubernetes, ai
+  - Includes deep links to GitHub release, upstream PRs, and repo
+  - Includes honest limitations section
+- **AI Detection article also published on Dev.to** (2026-02-19):
+  - https://dev.to/ogulcanaydogan/how-i-built-an-ai-content-detection-system-from-scratch-oe4
+  - Article ID: 3269248
+  - Tags: ai, python, machinelearning, opensource
+- Original Gist mirror remains at:
   - https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb
-- Canonical third-party publication target (primary evidence link) is pending:
-  - Dev.to / Medium / newsletter publication URL to be inserted after posting.
-- Dev.to publish automation is ready but currently blocked by missing credential:
-  - `DEVTO_API_KEY` is not set in the execution environment.
-  - command: `PUBLISHED_FLAG=true ./scripts/publish-devto-mention.sh`
-  - workflow option: `.github/workflows/publish-third-party-mention.yml` (`workflow_dispatch`)
-  - prerequisite: set repository secret `DEVTO_API_KEY`
-  - latest validation run failed exactly at secret preflight:
-    - https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22200978995
-- Evidence pack prepared for post-publication URL insertion:
+- Canonical mention source-of-truth is fixed to:
+  - `docs/public-footprint/third-party-mention-canonical-url.txt`
+- Additional publication links for Evidence Summary are tracked in:
+  - `docs/public-footprint/third-party-mention-publications.tsv`
+- Evidence pack uses URL-only source for machine-consumed mention metrics:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
 
 ## Minimal Mention Outline

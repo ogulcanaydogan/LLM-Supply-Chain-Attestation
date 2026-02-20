@@ -4,7 +4,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 ## Snapshot
 
-- Generated: 2026-02-19 UTC
+- Generated: 2026-02-20 UTC
 - Scope: `llmsa` public footprint only
 - Source of truth:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
@@ -17,26 +17,21 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `1` open (`scorecard#4942`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `88.14% (52/59)`; post-hardening `100% (19/19)` | partially complete |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `89.06% (57/64)`; post-hardening `100% (24/24)` | partially complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
-| WS5: Third-party mention | canonical non-GitHub publication URL | still gist mirror; Dev.to workflow blocked by missing `DEVTO_API_KEY` | blocked (credential dependency) |
+| WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
 
 ## Automated Completion Verdict
 
 - Strict complete: `false`
-- Practical complete: `false`
+- Practical complete: `true`
 - Blockers:
-  - A canonical third-party mention URL (non-GitHub/Gist) is required.
-  - Rolling 30-day CI pass rate is below target (`88.14%`, target `>=95%`).
+  - Rolling 30-day CI pass rate is below target (`89.06%`, target `>=95%`).
 
 ## Completion Gates Remaining
 
-1. Canonical publication:
-   - Set repository secret `DEVTO_API_KEY`.
-   - Run `.github/workflows/publish-third-party-mention.yml`.
-   - Replace gist-primary mention with canonical URL in evidence docs.
-2. Rolling-window CI target:
+1. Rolling-window CI target:
    - Keep workflows green so historical failures age out of the 30-day denominator.
    - Recompute rolling pass-rate in each snapshot cycle.
 
@@ -45,5 +40,5 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 When the roadmap is considered complete:
 
 1. `>=1` upstream PR is merged and reflected in docs.
-2. Canonical third-party mention URL is published and linked from evidence pack.
-3. Rolling CI pass-rate is `>=95%` or explicitly justified with post-hardening trend and an updated acceptance note.
+2. Canonical third-party mention URL is published and linked from evidence pack. (met)
+3. Rolling CI pass-rate is `>=95%` or explicitly justified with post-hardening trend and an updated acceptance note. (pending)

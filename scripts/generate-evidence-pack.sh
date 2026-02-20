@@ -36,6 +36,42 @@ require_source() {
   fi
 }
 
+trim() {
+  echo "$1" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//'
+}
+
+normalize_url() {
+  local value="$1"
+  value="$(trim "${value}")"
+  value="${value//\`/}"
+  value="$(echo "${value}" | cut -d',' -f1)"
+  value="$(trim "${value}")"
+  echo "${value}"
+}
+
+resolve_mention_url() {
+  local canonical_file="$1"
+  local env_url="$2"
+  local evidence_pack_file="$3"
+  local url=""
+
+  # Source-of-truth priority: canonical file -> env var -> existing evidence pack -> gist fallback.
+  if [[ -f "${canonical_file}" ]]; then
+    url="$(head -n1 "${canonical_file}" || true)"
+  fi
+  if [[ -z "${url}" && -n "${env_url}" ]]; then
+    url="${env_url}"
+  fi
+  if [[ -z "${url}" && -f "${evidence_pack_file}" ]]; then
+    url="$(awk -F'|' '/^\| Third-party mentions \|/ {print $4; exit}' "${evidence_pack_file}" || true)"
+  fi
+  if [[ -z "${url}" ]]; then
+    url="https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb"
+  fi
+
+  normalize_url "${url}"
+}
+
 repo_from_git_remote() {
   local remote
   remote="$(git config --get remote.origin.url 2>/dev/null || true)"
@@ -132,6 +168,8 @@ CASE_STUDY_PATH="docs/public-footprint/case-study-anonymous-pilot-2026-02.md"
 TAMPER_RESULTS_JSON=".llmsa/tamper/results.json"
 BENCHMARK_SUMMARY="$(latest_file ".llmsa/benchmarks/*/summary.md")"
 BENCHMARK_SOURCE="${BENCHMARK_SUMMARY}"
+CANONICAL_MENTION_FILE="docs/public-footprint/third-party-mention-canonical-url.txt"
+MENTION_PUBLICATIONS_FILE="docs/public-footprint/third-party-mention-publications.tsv"
 
 if [[ ! -f "${EXTERNAL_LOG}" ]]; then
   echo "error: missing required file: ${EXTERNAL_LOG}" >&2
@@ -197,8 +235,21 @@ UPSTREAM_OPEN_COUNT="$(jq -r '[.[] | select(.state == "open")] | length' "${UPST
 UPSTREAM_IN_REVIEW_COUNT="${UPSTREAM_OPEN_COUNT}"
 UPSTREAM_CLOSED_UNMERGED_COUNT="$(jq -r '[.[] | select(.state == "closed" and .merged != true)] | length' "${UPSTREAM_STATES_JSON}")"
 
-THIRD_PARTY_MENTION_URL="${THIRD_PARTY_MENTION_URL:-https://gist.github.com/ogulcanaydogan/7cffe48a760a77cb42cb1f87644909bb}"
-THIRD_PARTY_MENTION_COUNT=1
+THIRD_PARTY_MENTION_URL="$(resolve_mention_url "${CANONICAL_MENTION_FILE}" "${THIRD_PARTY_MENTION_URL:-}" "${EVIDENCE_PACK}")"
+
+THIRD_PARTY_PUBLICATION_ROWS=()
+if [[ -f "${MENTION_PUBLICATIONS_FILE}" ]]; then
+  while IFS='|' read -r claim date_utc url; do
+    claim="$(trim "${claim}")"
+    date_utc="$(trim "${date_utc}")"
+    url="$(normalize_url "${url}")"
+    if [[ -z "${claim}" || -z "${date_utc}" || -z "${url}" ]]; then
+      continue
+    fi
+    THIRD_PARTY_PUBLICATION_ROWS+=("${claim}|${date_utc}|${url}")
+  done < "${MENTION_PUBLICATIONS_FILE}"
+fi
+THIRD_PARTY_MENTION_COUNT=$((1 + ${#THIRD_PARTY_PUBLICATION_ROWS[@]}))
 CASE_STUDY_COUNT=1
 
 LATEST_RELEASE_TAG="v1.0.0"
@@ -390,7 +441,15 @@ require_source "Verify p95" "${BENCHMARK_METRIC_SOURCE}"
     fi
   done < <(jq -r '.[] | "\(.url)|\(.state)|\(.merged)|\(.updated_at // "")"' "${UPSTREAM_STATES_JSON}")
   echo "| Anonymous pilot case study published | Adoption | 2026-02-18 | \`${CASE_STUDY_SOURCE}\` |"
-  echo "| Third-party technical mention published | Mention | 2026-02-18 | ${THIRD_PARTY_MENTION_URL} |"
+  echo "| Third-party technical mention published (canonical) | Mention | 2026-02-18 | ${THIRD_PARTY_MENTION_URL} |"
+  if [[ "${#THIRD_PARTY_PUBLICATION_ROWS[@]}" -gt 0 ]]; then
+    for row in "${THIRD_PARTY_PUBLICATION_ROWS[@]}"; do
+      pub_claim="$(echo "${row}" | cut -d'|' -f1)"
+      pub_date="$(echo "${row}" | cut -d'|' -f2)"
+      pub_url="$(echo "${row}" | cut -d'|' -f3)"
+      echo "| ${pub_claim} | Article | ${pub_date} | ${pub_url} |"
+    done
+  fi
   echo
   echo "## Metrics Snapshot"
   echo

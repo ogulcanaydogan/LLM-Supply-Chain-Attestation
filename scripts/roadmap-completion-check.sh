@@ -26,23 +26,25 @@ normalize_url() {
 
 is_canonical_mention() {
   local url="$1"
+  local lower
   if [[ -z "${url}" ]]; then
     echo "false"
     return
   fi
-  if [[ "${url}" =~ ^https://gist\.github\.com/ ]]; then
+  lower="$(echo "${url}" | tr '[:upper:]' '[:lower:]')"
+  if [[ ! "${lower}" =~ ^https?:// ]]; then
     echo "false"
     return
   fi
-  if [[ "${url}" =~ ^https://github\.com/ ]]; then
+  if [[ "${lower}" =~ ^https?://([a-z0-9-]+\.)?gist\.github\.com(/|$) ]]; then
     echo "false"
     return
   fi
-  if [[ "${url}" =~ ^https?:// ]]; then
-    echo "true"
+  if [[ "${lower}" =~ ^https?://([a-z0-9-]+\.)?github\.com(/|$) ]]; then
+    echo "false"
     return
   fi
-  echo "false"
+  echo "true"
 }
 
 SNAPSHOT_JSON="${1:-$(latest_file ".llmsa/public-footprint/*/snapshot.json")}"
@@ -61,8 +63,11 @@ CANONICAL_URL_FILE="docs/public-footprint/third-party-mention-canonical-url.txt"
 EVIDENCE_PACK_FILE="docs/public-footprint/evidence-pack-2026-02-18.md"
 MENTION_URL="${THIRD_PARTY_MENTION_URL:-}"
 
-if [[ -z "${MENTION_URL}" && -f "${CANONICAL_URL_FILE}" ]]; then
+if [[ -f "${CANONICAL_URL_FILE}" ]]; then
   MENTION_URL="$(head -n1 "${CANONICAL_URL_FILE}" || true)"
+fi
+if [[ -z "${MENTION_URL}" ]]; then
+  MENTION_URL="${THIRD_PARTY_MENTION_URL:-}"
 fi
 if [[ -z "${MENTION_URL}" && -f "${EVIDENCE_PACK_FILE}" ]]; then
   MENTION_URL="$(awk -F'|' '/^\| Third-party mentions \|/ {print $4; exit}' "${EVIDENCE_PACK_FILE}" || true)"
