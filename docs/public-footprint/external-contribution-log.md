@@ -27,6 +27,7 @@ Track only contributions to repositories outside this project.
 | 2026-02-23T19:59:41Z | `gh pr comment` (manual retries) | failed | Blocked by transient `api.github.com` connectivity failures during retry loop. |
 | 2026-02-23T20:00:08Z | `scripts/upstream-pr-followup.sh` (`POST_FOLLOWUPS=true`) | posted | Follow-up comment posted: https://github.com/ossf/scorecard/pull/4942#issuecomment-3946999971 |
 | 2026-02-23T20:14:29Z | `scripts/upstream-pr-followup.sh` (`POST_FOLLOWUPS=true`) | skipped | Automation ran on cadence and skipped duplicate posting because latest comment author was current actor. |
+| 2026-02-23T21:32:42Z | `scripts/upstream-pr-followup.sh` (`POST_FOLLOWUPS=true`) | skipped | Automation cycle recorded `followup_due=false`; latest PR comment author remained current actor, so no duplicate nudge was posted. |
 
 ## Status Definitions
 
