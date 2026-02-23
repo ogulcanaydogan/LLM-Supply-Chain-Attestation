@@ -59,6 +59,16 @@ jobs:
           chmod +x scripts/roadmap-completion-check.sh
           ./scripts/roadmap-completion-check.sh
 
+      - name: Generate scorecard fallback readiness
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x scripts/scorecard-fallback-readiness.sh
+          ./scripts/scorecard-fallback-readiness.sh \
+            --repo ossf/scorecard \
+            --pr-number 4942 \
+            --fallback-not-before 2026-03-02T00:00:00Z
+
       - name: Validate footprint consistency
         run: |
           chmod +x scripts/check-footprint-consistency.sh

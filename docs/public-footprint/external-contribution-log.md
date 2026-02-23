@@ -19,6 +19,7 @@ Track only contributions to repositories outside this project.
 - Automation workflow: `.github/workflows/upstream-pr-followup.yml`.
 - Current execution note: OPA maintainer requested this content remain project-specific; no further OPA docs PRs planned for this topic.
 - Operational note (2026-02-23 UTC): automated follow-up posting succeeded for `ossf/scorecard#4942` at `2026-02-23T20:00:08Z`; current state remains `in-review` and awaiting maintainer decision.
+- Reviewer-request limitation: direct reviewer request API to `ossf/scorecard` from external contributor context returned `404` (`requested_reviewers` endpoint), so cadence remains comment-based plus fallback-date policy.
 
 ## Follow-up Attempt Ledger (`ossf/scorecard#4942`)
 
@@ -28,6 +29,7 @@ Track only contributions to repositories outside this project.
 | 2026-02-23T20:00:08Z | `scripts/upstream-pr-followup.sh` (`POST_FOLLOWUPS=true`) | posted | Follow-up comment posted: https://github.com/ossf/scorecard/pull/4942#issuecomment-3946999971 |
 | 2026-02-23T20:14:29Z | `scripts/upstream-pr-followup.sh` (`POST_FOLLOWUPS=true`) | skipped | Automation ran on cadence and skipped duplicate posting because latest comment author was current actor. |
 | 2026-02-23T21:32:42Z | `scripts/upstream-pr-followup.sh` (`POST_FOLLOWUPS=true`) | skipped | Automation cycle recorded `followup_due=false`; latest PR comment author remained current actor, so no duplicate nudge was posted. |
+| 2026-02-23T21:33:00Z | `gh pr edit --add-reviewer ossf/scorecard-doc-maintainers` | failed | GitHub API returned `404` on `requested_reviewers` endpoint for external contributor context; no reviewer assignment was made. |
 
 ## Status Definitions
 
