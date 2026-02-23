@@ -19,7 +19,16 @@ latest_file() {
 }
 
 require_cmd jq
-require_cmd rg
+
+SEARCH_BIN=""
+if command -v rg >/dev/null 2>&1; then
+  SEARCH_BIN="rg"
+elif command -v grep >/dev/null 2>&1; then
+  SEARCH_BIN="grep"
+else
+  echo "error: required command not found: rg or grep" >&2
+  exit 1
+fi
 
 SNAPSHOT_JSON="${1:-$(latest_file ".llmsa/public-footprint/*/snapshot.json")}"
 CI_HEALTH_JSON="${2:-$(latest_file ".llmsa/public-footprint/*/ci-health.json")}"
@@ -74,10 +83,18 @@ append_blocker() {
 }
 
 mapfile -t SNAPSHOT_REFS < <(
-  rg -o --no-filename '\.llmsa/public-footprint/[0-9TZ]+/snapshot\.json' "${DOCS[@]}" | sort -u
+  if [[ "${SEARCH_BIN}" == "rg" ]]; then
+    rg -o --no-filename '\.llmsa/public-footprint/[0-9TZ]+/snapshot\.json' "${DOCS[@]}"
+  else
+    grep -Eho '\.llmsa/public-footprint/[0-9TZ]+/snapshot\.json' "${DOCS[@]}"
+  fi | sort -u
 )
 mapfile -t CI_REFS < <(
-  rg -o --no-filename '\.llmsa/public-footprint/[0-9TZ]+/ci-health\.json' "${DOCS[@]}" | sort -u
+  if [[ "${SEARCH_BIN}" == "rg" ]]; then
+    rg -o --no-filename '\.llmsa/public-footprint/[0-9TZ]+/ci-health\.json' "${DOCS[@]}"
+  else
+    grep -Eho '\.llmsa/public-footprint/[0-9TZ]+/ci-health\.json' "${DOCS[@]}"
+  fi | sort -u
 )
 
 if [[ "${#SNAPSHOT_REFS[@]}" -eq 0 ]]; then
