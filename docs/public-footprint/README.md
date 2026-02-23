@@ -33,6 +33,7 @@ The goal is to convert strong internal engineering quality into externally verif
 - `roadmap-status-2026-02.md`: current roadmap-completion status and endgame gates.
 - `external-contribution-log.md`: tracker for opened/merged external PRs.
 - `v1.0.1-hardening-closure.md`: hardening completion checklist and linked evidence.
+- `../project-completion-roadmap-2026-02.md`: full project completion roadmap with current closure process and operating cadence.
 - `third-party-mention-canonical-url.txt`: one-line canonical mention URL (non-GitHub) used as machine source-of-truth.
 - `third-party-mention-publications.tsv`: optional additional publication links rendered in evidence summary.
 
