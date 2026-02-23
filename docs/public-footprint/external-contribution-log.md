@@ -17,6 +17,7 @@ Track only contributions to repositories outside this project.
 - No maintainer response after `5 days`: open a reduced-scope fallback PR and cross-link both PRs.
 - Automation workflow: `.github/workflows/upstream-pr-followup.yml`.
 - Current execution note: OPA maintainer requested this content remain project-specific; no further OPA docs PRs planned for this topic.
+- Operational note (2026-02-23 UTC): manual follow-up attempts to `ossf/scorecard#4942` were retried but blocked by transient GitHub API connectivity failures; follow-up remains due and is queued for next successful API window.
 
 ## Status Definitions
 

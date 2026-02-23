@@ -4,7 +4,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 ## Snapshot
 
-- Generated: 2026-02-20 UTC
+- Generated: 2026-02-23 UTC
 - Scope: `llmsa` public footprint only
 - Source of truth:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
@@ -17,7 +17,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `1` open (`scorecard#4942`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `93.33% (84/90)`; post-hardening `98.51% (66/67)` | complete (accepted with justification) |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `95.35% (82/86)`; post-hardening `98.68% (75/76)` | complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
@@ -28,22 +28,26 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 - Practical complete: `true`
 - Blockers: none
 
-## WS2 Acceptance Note
+## WS2 Closure Note
 
-The rolling 30-day CI pass rate is `93.33%` (84/90), below the `>=95%` target.
-This workstream is closed with justification per the roadmap's explicit acceptance clause:
+The rolling 30-day CI pass rate now exceeds the strict target:
 
-1. **Post-hardening rate exceeds target.** Since the v1.0.1 hardening release (`2026-02-19T16:08:22Z`), the CI pass rate is `98.51%` (66/67), well above the 95% threshold.
-2. **All 6 failures are pre-hardening.** Every failure in the rolling window pre-dates the v1.0.1 hardening fixes. Root causes (flaky store test setup, preflight timing) were resolved in commits `6ceb8f3` and the CI reliability changes shipped in v1.0.1.
-3. **Failures are aging out naturally.** The rolling denominator will cross 95% within days as pre-hardening runs leave the 30-day window. No code changes are needed.
-4. **Decision:** WS2 is accepted as complete. The post-hardening trend demonstrates sustained reliability above target, and the rolling shortfall reflects only historical noise.
+1. **Strict threshold met.** Rolling CI pass rate is `95.35%` (`82/86`), above the `>=95%` requirement.
+2. **Post-hardening trend remains strong.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `98.68%` (`75/76`).
+3. **Decision:** WS2 is complete under strict criteria, without acceptance override.
 
 ## Closure Summary
 
 All 5 Day-30 roadmap workstreams are complete:
 
 1. **WS1 (Upstream conversion):** met — `cosign#4710` merged.
-2. **WS2 (CI pass-rate):** met — accepted with post-hardening justification (`98.51%`).
+2. **WS2 (CI pass-rate):** met — strict rolling threshold satisfied (`95.35%`).
 3. **WS3 (v1.0.1 hardening):** met — release and verification artifacts published.
 4. **WS4 (Evidence automation):** met — one-command refresh scripts wired to weekly workflow.
 5. **WS5 (Third-party mention):** met — canonical Dev.to article published and linked.
+
+## Runtime/Infra Profile
+
+- Current execution model: GitHub Actions workflows plus local Go CLI tooling.
+- Not used in this repository runtime/process: NVIDIA `V100`, NVIDIA `A100`, Apache Spark.
+- Update trigger: revise this profile only when a GPU/Spark benchmark lane is added to public evidence.

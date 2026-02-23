@@ -36,6 +36,7 @@ The goal is to convert strong internal engineering quality into externally verif
 - `../project-completion-roadmap-2026-02.md`: full project completion roadmap with current closure process and operating cadence.
 - `third-party-mention-canonical-url.txt`: one-line canonical mention URL (non-GitHub) used as machine source-of-truth.
 - `third-party-mention-publications.tsv`: optional additional publication links rendered in evidence summary.
+- `scripts/check-footprint-consistency.sh`: guard script that validates machine verdict vs narrative docs and snapshot/ci-health artifact consistency.
 
 ## Operating Rhythm
 
@@ -46,3 +47,4 @@ The goal is to convert strong internal engineering quality into externally verif
 5. Publish canonical third-party mention via `.github/workflows/publish-third-party-mention.yml` once `DEVTO_API_KEY` secret is configured.
 6. Run `scripts/roadmap-completion-check.sh` to determine strict/practical roadmap completion and current blockers.
 7. Run `scripts/ci-passrate-forecast.sh` to estimate success-only runs needed for rolling `>=95%`.
+8. Run `scripts/check-footprint-consistency.sh` before freezing docs to block stale or contradictory footprint narratives.

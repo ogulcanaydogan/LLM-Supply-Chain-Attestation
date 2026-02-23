@@ -59,6 +59,11 @@ jobs:
           chmod +x scripts/roadmap-completion-check.sh
           ./scripts/roadmap-completion-check.sh
 
+      - name: Validate footprint consistency
+        run: |
+          chmod +x scripts/check-footprint-consistency.sh
+          ./scripts/check-footprint-consistency.sh
+
       - name: Upload snapshot artifacts
         uses: actions/upload-artifact@v4
         with:
