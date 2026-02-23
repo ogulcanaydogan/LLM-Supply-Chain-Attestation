@@ -73,6 +73,11 @@ if ! [[ "${FOLLOWUP_INTERVAL_HOURS}" =~ ^[0-9]+$ ]]; then
 fi
 FOLLOWUP_INTERVAL_SECONDS=$((FOLLOWUP_INTERVAL_HOURS * 60 * 60))
 FALLBACK_THRESHOLD_SECONDS=$((5 * 24 * 60 * 60))
+FALLBACK_NOT_BEFORE_UTC="${FALLBACK_NOT_BEFORE_UTC:-}"
+FALLBACK_NOT_BEFORE_EPOCH=""
+if [[ -n "${FALLBACK_NOT_BEFORE_UTC}" ]]; then
+  FALLBACK_NOT_BEFORE_EPOCH="$(iso_epoch "${FALLBACK_NOT_BEFORE_UTC}")"
+fi
 EXTERNAL_LOG="docs/public-footprint/external-contribution-log.md"
 POST_FOLLOWUPS="${POST_FOLLOWUPS:-false}"
 FOLLOWUP_COMMENT_BODY="${FOLLOWUP_COMMENT_BODY:-Maintainer follow-up on current HEAD:
@@ -87,6 +92,7 @@ FOLLOWUP_ATTEMPTS_MD="${OUT_DIR}/upstream-followup-attempts.md"
 CURRENT_ACTOR="$(gh api user --jq '.login' 2>/dev/null || true)"
 export FOLLOWUP_INTERVAL_HOURS
 export POST_FOLLOWUPS
+export FALLBACK_NOT_BEFORE_UTC
 mapfile -t PRS < <(extract_upstream_pr_urls "${EXTERNAL_LOG}" | while IFS= read -r pr_url; do parse_pr_repo_number "${pr_url}"; done)
 if [[ "${#PRS[@]}" -eq 0 ]]; then
   PRS=(
@@ -130,6 +136,9 @@ for entry in "${PRS[@]}"; do
     fi
     if (( age_seconds >= FALLBACK_THRESHOLD_SECONDS )); then
       fallback_pr_recommended=true
+    fi
+    if [[ -n "${FALLBACK_NOT_BEFORE_EPOCH}" && "${NOW_EPOCH}" -lt "${FALLBACK_NOT_BEFORE_EPOCH}" ]]; then
+      fallback_pr_recommended=false
     fi
 
     should_attempt_post=false
@@ -222,6 +231,7 @@ jq -s '
     generated_at_utc: now | todateiso8601,
     followup_interval_hours: env.FOLLOWUP_INTERVAL_HOURS | tonumber,
     fallback_threshold_days: 5,
+    fallback_not_before_utc: (if (env.FALLBACK_NOT_BEFORE_UTC // "") == "" then null else env.FALLBACK_NOT_BEFORE_UTC end),
     post_followups_enabled: (env.POST_FOLLOWUPS == "true"),
     prs: .
   }
