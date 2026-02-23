@@ -49,4 +49,6 @@ The goal is to convert strong internal engineering quality into externally verif
 6. Run `scripts/roadmap-completion-check.sh` to determine strict/practical roadmap completion and current blockers.
 7. Run `scripts/ci-passrate-forecast.sh` to estimate success-only runs needed for rolling `>=95%`.
 8. Run `scripts/check-footprint-consistency.sh` before freezing docs to block stale or contradictory footprint narratives.
+   - default scope is `full` (all narrative + metric docs).
+   - CI weekly uses `CONSISTENCY_SCOPE=core` for generated metric docs (`measurement-dashboard`, `evidence-pack`).
 9. Run `scripts/scorecard-fallback-readiness.sh` to confirm whether fallback conversion should be executed or cadence should continue.

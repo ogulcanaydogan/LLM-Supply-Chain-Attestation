@@ -50,10 +50,28 @@ fi
 DOCS=(
   "docs/public-footprint/measurement-dashboard.md"
   "docs/public-footprint/evidence-pack-2026-02-18.md"
+)
+
+DOCS_FULL=(
+  "docs/public-footprint/measurement-dashboard.md"
+  "docs/public-footprint/evidence-pack-2026-02-18.md"
   "docs/public-footprint/roadmap-status-2026-02.md"
   "docs/public-footprint/day-30-outcomes-2026-02.md"
   "docs/public-footprint/v1.0.1-hardening-closure.md"
 )
+
+CONSISTENCY_SCOPE="${CONSISTENCY_SCOPE:-full}"
+if [[ "${CONSISTENCY_SCOPE}" == "full" ]]; then
+  DOCS=("${DOCS_FULL[@]}")
+elif [[ "${CONSISTENCY_SCOPE}" == "core" ]]; then
+  DOCS=(
+    "docs/public-footprint/measurement-dashboard.md"
+    "docs/public-footprint/evidence-pack-2026-02-18.md"
+  )
+else
+  echo "error: CONSISTENCY_SCOPE must be 'full' or 'core'" >&2
+  exit 1
+fi
 
 for doc in "${DOCS[@]}"; do
   if [[ ! -f "${doc}" ]]; then
@@ -144,6 +162,7 @@ jq -n \
   --arg completion_json "${COMPLETION_JSON}" \
   --arg strict_machine "${STRICT_MACHINE}" \
   --arg practical_machine "${PRACTICAL_MACHINE}" \
+  --arg consistency_scope "${CONSISTENCY_SCOPE}" \
   --argjson consistent "${CONSISTENT}" \
   --argjson docs "$(printf '%s\n' "${DOCS[@]}" | jq -R . | jq -s .)" \
   --argjson snapshot_refs "$(printf '%s\n' "${SNAPSHOT_REFS[@]-}" | sed '/^$/d' | jq -R . | jq -s .)" \
@@ -160,6 +179,7 @@ jq -n \
       strict_complete: ($strict_machine == "true"),
       practical_complete: ($practical_machine == "true")
     },
+    consistency_scope: $consistency_scope,
     docs_scanned: $docs,
     doc_references: {
       snapshot_json_refs: $snapshot_refs,

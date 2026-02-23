@@ -70,6 +70,8 @@ jobs:
             --fallback-not-before 2026-03-02T00:00:00Z
 
       - name: Validate footprint consistency
+        env:
+          CONSISTENCY_SCOPE: core
         run: |
           chmod +x scripts/check-footprint-consistency.sh
           ./scripts/check-footprint-consistency.sh
