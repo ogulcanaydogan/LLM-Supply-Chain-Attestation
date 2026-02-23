@@ -17,7 +17,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `1` open (`scorecard#4942`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `95.35% (82/86)`; post-hardening `98.68% (75/76)` | complete |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `95.35% (82/86)`; post-hardening `98.75% (79/80)` | complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
@@ -33,7 +33,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 The rolling 30-day CI pass rate now exceeds the strict target:
 
 1. **Strict threshold met.** Rolling CI pass rate is `95.35%` (`82/86`), above the `>=95%` requirement.
-2. **Post-hardening trend remains strong.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `98.68%` (`75/76`).
+2. **Post-hardening trend remains strong.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `98.75%` (`79/80`).
 3. **Decision:** WS2 is complete under strict criteria, without acceptance override.
 
 ## Closure Summary
