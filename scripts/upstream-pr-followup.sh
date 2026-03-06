@@ -82,23 +82,25 @@ EXTERNAL_LOG="docs/public-footprint/external-contribution-log.md"
 POST_FOLLOWUPS="${POST_FOLLOWUPS:-false}"
 FOLLOWUP_COMMENT_BODY="${FOLLOWUP_COMMENT_BODY:-Maintainer follow-up on current HEAD:
 
-- docs-only diff remains intentionally narrow (no check behavior changes)
-- beginner evidence progression still maps SBOM generation to Signed-Releases verification
-- DCO/sign-off is passing
+- docs-only change (no code or behavior changes)
+- checks are green where reported on current run set
+- scope remains intentionally narrow
 
-If scope looks acceptable, could a maintainer take final review for merge?}"
+Could a maintainer take final review for merge?}"
+FOLLOWUP_AUTOPING_ALLOWLIST="${FOLLOWUP_AUTOPING_ALLOWLIST:-sigstore/cosign:4740,ossf/scorecard:4960}"
 FOLLOWUP_ATTEMPTS_JSON="${OUT_DIR}/upstream-followup-attempts.json"
 FOLLOWUP_ATTEMPTS_MD="${OUT_DIR}/upstream-followup-attempts.md"
 CURRENT_ACTOR="$(gh api user --jq '.login' 2>/dev/null || true)"
 export FOLLOWUP_INTERVAL_HOURS
 export POST_FOLLOWUPS
 export FALLBACK_NOT_BEFORE_UTC
+export FOLLOWUP_AUTOPING_ALLOWLIST
 mapfile -t PRS < <(extract_upstream_pr_urls "${EXTERNAL_LOG}" | while IFS= read -r pr_url; do parse_pr_repo_number "${pr_url}"; done)
 if [[ "${#PRS[@]}" -eq 0 ]]; then
   PRS=(
-    "sigstore/cosign:4710"
-    "open-policy-agent/opa:8343"
-    "ossf/scorecard:4942"
+    "sigstore/cosign:4740"
+    "ossf/scorecard:4960"
+    "slsa-framework/slsa-github-generator:4468"
   )
 fi
 
@@ -130,6 +132,7 @@ for entry in "${PRS[@]}"; do
   followup_attempt_status="skipped"
   followup_attempt_message=""
   followup_attempted_at=""
+  autoping_allowed=false
   if [[ "${state}" == "open" && "${merged}" == "false" ]]; then
     if (( age_seconds >= FOLLOWUP_INTERVAL_SECONDS )); then
       followup_due=true
@@ -153,7 +156,15 @@ for entry in "${PRS[@]}"; do
       fi
     fi
 
-    if [[ "${should_attempt_post}" == "true" ]]; then
+    IFS=',' read -r -a allow_entries <<< "${FOLLOWUP_AUTOPING_ALLOWLIST}"
+    for allow_entry in "${allow_entries[@]}"; do
+      if [[ "${allow_entry}" == "${repo}:${number}" ]]; then
+        autoping_allowed=true
+        break
+      fi
+    done
+
+    if [[ "${should_attempt_post}" == "true" && "${autoping_allowed}" == "true" ]]; then
       followup_attempted=true
       followup_attempted_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
       if gh pr comment "${number}" --repo "${repo}" --body "${FOLLOWUP_COMMENT_BODY}" >/dev/null 2>&1; then
@@ -164,6 +175,9 @@ for entry in "${PRS[@]}"; do
         followup_attempt_status="failed"
         followup_attempt_message="failed to post comment (API/auth/transient issue)"
       fi
+    elif [[ "${should_attempt_post}" == "true" && "${autoping_allowed}" != "true" ]]; then
+      followup_attempt_status="skipped"
+      followup_attempt_message="follow-up due but entry is not in FOLLOWUP_AUTOPING_ALLOWLIST"
     fi
   fi
 
@@ -185,6 +199,7 @@ for entry in "${PRS[@]}"; do
     --arg followup_attempted_at "${followup_attempted_at}" \
     --arg latest_comment_author "${latest_comment_author}" \
     --arg latest_comment_at "${latest_comment_at}" \
+    --argjson autoping_allowed "${autoping_allowed}" \
     '{
       repo: $repo,
       number: $number,
@@ -202,7 +217,8 @@ for entry in "${PRS[@]}"; do
       followup_attempt_message: $followup_attempt_message,
       followup_attempted_at: $followup_attempted_at,
       latest_comment_author: $latest_comment_author,
-      latest_comment_at: $latest_comment_at
+      latest_comment_at: $latest_comment_at,
+      autoping_allowed: $autoping_allowed
     }' >> "${TMP_NDJSON}"
 
   if [[ "${followup_attempted}" == "true" ]]; then
@@ -233,6 +249,7 @@ jq -s '
     fallback_threshold_days: 5,
     fallback_not_before_utc: (if (env.FALLBACK_NOT_BEFORE_UTC // "") == "" then null else env.FALLBACK_NOT_BEFORE_UTC end),
     post_followups_enabled: (env.POST_FOLLOWUPS == "true"),
+    followup_autoping_allowlist: (env.FOLLOWUP_AUTOPING_ALLOWLIST | split(",")),
     prs: .
   }
 ' "${TMP_NDJSON}" > "${FOLLOWUP_JSON}"

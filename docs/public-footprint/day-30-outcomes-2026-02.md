@@ -13,8 +13,8 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 | Third-party mention count | >=1 | 5 (canonical Dev.to + additional publications) | achieved | `docs/public-footprint/evidence-pack-2026-02-18.md` |
 | Anonymous pilot case study | >=1 | 1 | achieved | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Hardening release closure | v1.0.1 complete evidence | complete | achieved | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
-| CI pass-rate (rolling 30-day) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T105635Z/ci-health.json` |
-| CI pass-rate (post-hardening baseline) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T105635Z/ci-health.json` |
+| CI pass-rate (rolling 30-day) | >=95% | 94.92% (56/59) | in progress | `.llmsa/public-footprint/20260306T133739Z/ci-health.json` |
+| CI pass-rate (post-hardening baseline) | >=95% | 94.92% (56/59) | in progress | `.llmsa/public-footprint/20260306T133739Z/ci-health.json` |
 
 ## What Worked
 
@@ -32,7 +32,7 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 ## Next Cycle Priorities
 
-1. Convert a second merge from remaining open PRs (`scorecard#4960`, `slsa-github-generator#4468`, `cosign#4740`) if maintainers accept scope.
+1. Convert a second merge from remaining open PRs (`cosign#4740`, `scorecard#4960`, `slsa-github-generator#4468`) if maintainers accept scope.
 2. Maintain CI/workflow stability above strict threshold and rerun consistency checks on each evidence refresh.
 3. Refresh and freeze evidence pack + roadmap outputs after each upstream PR status change.
 

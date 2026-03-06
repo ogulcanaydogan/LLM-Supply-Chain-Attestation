@@ -17,34 +17,36 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `3` open (`scorecard#4960`, `slsa-github-generator#4468`, `cosign#4740`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `95.00% (57/60)`; post-hardening `95.00% (57/60)` | complete |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `94.92% (56/59)`; post-hardening `94.92% (56/59)` | in progress |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
 
 ## Automated Completion Verdict
 
-- Strict complete: `true`
-- Practical complete: `true`
-- Blockers: none
+- Strict complete: see latest machine artifact (`.llmsa/public-footprint/*/roadmap-completion.json`)
+- Practical complete: see latest machine artifact (`.llmsa/public-footprint/*/roadmap-completion.json`)
+- Blockers: see latest machine artifact.
 
 ## WS2 Closure Note
 
-The rolling 30-day CI pass rate now exceeds the strict target:
+The rolling 30-day CI pass rate is currently below the strict target:
 
-1. **Strict threshold met.** Rolling CI pass rate is `95.00%` (`57/60`), at the `>=95%` requirement.
-2. **Post-hardening threshold met.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `95.00%` (`57/60`).
-3. **Decision:** WS2 is complete under strict criteria, without acceptance override.
+1. **Current snapshot.** Rolling CI pass rate is `94.92%` (`56/59`), below the `>=95%` requirement.
+2. **Post-hardening snapshot.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `94.92%` (`56/59`).
+3. **Decision:** WS2 remains in progress until the machine artifact returns `meets_pass_rate_target=true`.
 
 ## Closure Summary
 
-All 5 Day-30 roadmap workstreams are complete:
+Day-30 workstreams status:
 
 1. **WS1 (Upstream conversion):** met — `cosign#4710` merged.
-2. **WS2 (CI pass-rate):** met — strict rolling threshold satisfied (`95.00%`).
+2. **WS2 (CI pass-rate):** in progress — strict rolling threshold currently not met (`94.92%`).
 3. **WS3 (v1.0.1 hardening):** met — release and verification artifacts published.
 4. **WS4 (Evidence automation):** met — one-command refresh scripts wired to weekly workflow.
 5. **WS5 (Third-party mention):** met — canonical Dev.to article published and linked.
+
+Primary lane for second external merge conversion: `https://github.com/sigstore/cosign/pull/4740` (secondary: `scorecard#4960`; passive backup: `slsa#4468`).
 
 ## Runtime/Infra Profile
 

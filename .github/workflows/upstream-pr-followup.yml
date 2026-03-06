@@ -21,7 +21,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           POST_FOLLOWUPS: "true"
           FOLLOWUP_INTERVAL_HOURS: "12"
-          FALLBACK_NOT_BEFORE_UTC: "2026-03-02T00:00:00Z"
+          FALLBACK_NOT_BEFORE_UTC: "2026-03-13T00:00:00Z"
+          FOLLOWUP_AUTOPING_ALLOWLIST: "sigstore/cosign:4740,ossf/scorecard:4960"
         run: |
           chmod +x scripts/upstream-pr-followup.sh
           ./scripts/upstream-pr-followup.sh

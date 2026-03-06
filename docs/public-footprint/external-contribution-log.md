@@ -12,16 +12,16 @@ Track only contributions to repositories outside this project.
 | 2026-02-18 | OpenSSF / Scorecard | https://github.com/ossf/scorecard/pull/4942 | Docs contribution | closed | 2026-03-06 (https://github.com/ossf/scorecard/pull/4942#issuecomment-4011028727) | Original wider-scope PR. Closed by author in favor of reduced-scope fallback `#4960` to keep a single active review path for maintainers. |
 | 2026-03-06 | OpenSSF / Scorecard | https://github.com/ossf/scorecard/pull/4960 | Docs contribution (reduced-scope fallback PR) | in-review | 2026-03-06 (https://github.com/ossf/scorecard/pull/4960#issuecomment-4010886725) | Reduced the change to a 2-line docs-only insertion in `docs/beginner-checks.md` and cross-linked `#4942` to provide a lower-friction review path after maintainer-gated checks on the original PR. |
 | 2026-03-06 | SLSA / slsa-github-generator | https://github.com/slsa-framework/slsa-github-generator/pull/4468 | Docs contribution (parallel backup PR) | in-review | 2026-03-06 (https://github.com/slsa-framework/slsa-github-generator/pull/4468#issuecomment-4010586951) | Opened narrow docs-only PR fixing a broken README anchor (`#verification-of-provenance` -> `#verify-provenance`) with DCO sign-off. Used as parallel external-validation lane while scorecard PR is maintainer-gated. |
-| 2026-03-06 | Sigstore / cosign | https://github.com/sigstore/cosign/pull/4740 | Docs contribution (parallel backup PR) | in-review | 2026-03-06 (opened: https://github.com/sigstore/cosign/pull/4740) | Opened a one-line docs-only fix for stale URL scheme in `CHANGELOG.md` (`[sigstore](sigstore.dev)` -> `[sigstore](https://sigstore.dev)`) to add an additional non-Scorecard merge lane. |
+| 2026-03-06 | Sigstore / cosign | https://github.com/sigstore/cosign/pull/4740 | Docs contribution (primary merge lane) | in-review | 2026-03-06 (https://github.com/sigstore/cosign/pull/4740#issuecomment-4011711412) | Opened a one-line docs-only fix for stale URL scheme in `CHANGELOG.md` (`[sigstore](sigstore.dev)` -> `[sigstore](https://sigstore.dev)`) and posted maintainer follow-up requesting final review. |
 
 ## Cadence Policy
 
 - Follow-up cadence: every `12h` while a PR remains open (auto-post best-effort when due).
 - No maintainer response after `5 days`: open a reduced-scope fallback PR and cross-link both PRs.
-- Fallback date anchor for `ossf/scorecard#4942`: `2026-03-02` UTC (based on latest successful follow-up at `2026-02-23T20:00:08Z`).
+- Fallback date anchor for `ossf/scorecard#4960`: `2026-03-13` UTC.
 - Automation workflow: `.github/workflows/upstream-pr-followup.yml`.
 - Current execution note: OPA maintainer requested this content remain project-specific; no further OPA docs PRs planned for this topic.
-- Operational note (2026-03-06 UTC): original scorecard PR `#4942` is now closed in favor of reduced-scope fallback `#4960`; maintainer approval gates still apply to open fork PR lanes.
+- Operational note (2026-03-06 UTC): primary merge lane is now `sigstore/cosign#4740`; `scorecard#4960` remains secondary, and `slsa#4468` remains passive backup.
 - Reviewer-request limitation: direct reviewer request API to `ossf/scorecard` from external contributor context returned `404` (`requested_reviewers` endpoint), so cadence remains comment-based plus fallback-date policy.
 
 ## Follow-up Attempt Ledger (`ossf/scorecard#4942`)
