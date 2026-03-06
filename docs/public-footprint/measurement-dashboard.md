@@ -17,18 +17,18 @@ Day-0 values are captured on **2026-02-18 UTC**.
 | GitHub forks | 0 | >=5 | 1 | `.llmsa/public-footprint/20260306T132248Z/snapshot.json` |
 | GitHub watchers | 0 | >=5 | 0 | `.llmsa/public-footprint/20260306T132248Z/snapshot.json` |
 | Release downloads (cumulative) | 184 | >=400 | 224 | `.llmsa/public-footprint/20260306T132248Z/snapshot.json` |
-| CI pass rate (last 30 days) | 93.3% | >=95% | 94.92% | `.llmsa/public-footprint/20260306T133739Z/ci-health.json` |
-| CI pass rate (post-hardening window) | n/a | >=95% | 94.92% | `.llmsa/public-footprint/20260306T133739Z/ci-health.json` |
+| CI pass rate (last 30 days) | 93.3% | >=95% | 95.31% | `.llmsa/public-footprint/20260306T140241Z/ci-health.json` |
+| CI pass rate (post-hardening window) | n/a | >=95% | 95.31% | `.llmsa/public-footprint/20260306T140241Z/ci-health.json` |
 
 ## Current Snapshot (2026-03-06 UTC)
 
 - Snapshot artifact (local): `.llmsa/public-footprint/20260306T132248Z/snapshot.json`
-- CI health artifact (local): `.llmsa/public-footprint/20260306T133739Z/ci-health.json`
-- CI pass rate source window: 56/59 successful runs (`94.92%`).
-- CI pass rate post-hardening (`2026-02-19T16:08:22Z`): 56/59 successful runs (`94.92%`, meets target=`false`).
+- CI health artifact (local): `.llmsa/public-footprint/20260306T140241Z/ci-health.json`
+- CI pass rate source window: 61/64 successful runs (`95.31%`).
+- CI pass rate post-hardening (`2026-02-19T16:08:22Z`): 61/64 successful runs (`95.31%`, meets target=`true`).
 - External write-up URL: https://dev.to/ogulcanaydogan/i-spent-3-months-solving-a-security-gap-nobody-talks-about-llm-artifact-integrity-6co
 - Upstream PR review stage:
   - `in-review`: 3
   - `closed`: 3
   - `merged`: 1
-- Dashboard generated at: `2026-03-06T13:40:50Z`
+- Dashboard generated at: `2026-03-06T14:03:03Z`

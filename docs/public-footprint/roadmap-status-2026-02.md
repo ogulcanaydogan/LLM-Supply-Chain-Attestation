@@ -17,7 +17,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `3` open (`scorecard#4960`, `slsa-github-generator#4468`, `cosign#4740`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `94.92% (56/59)`; post-hardening `94.92% (56/59)` | in progress |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `95.31% (61/64)`; post-hardening `95.31% (61/64)` | complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
@@ -30,18 +30,18 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 ## WS2 Closure Note
 
-The rolling 30-day CI pass rate is currently below the strict target:
+The rolling 30-day CI pass rate now exceeds the strict target:
 
-1. **Current snapshot.** Rolling CI pass rate is `94.92%` (`56/59`), below the `>=95%` requirement.
-2. **Post-hardening snapshot.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `94.92%` (`56/59`).
-3. **Decision:** WS2 remains in progress until the machine artifact returns `meets_pass_rate_target=true`.
+1. **Current snapshot.** Rolling CI pass rate is `95.31%` (`61/64`), above the `>=95%` requirement.
+2. **Post-hardening snapshot.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `95.31%` (`61/64`).
+3. **Decision:** WS2 is complete under strict criteria.
 
 ## Closure Summary
 
-Day-30 workstreams status:
+All Day-30 workstreams are complete:
 
 1. **WS1 (Upstream conversion):** met — `cosign#4710` merged.
-2. **WS2 (CI pass-rate):** in progress — strict rolling threshold currently not met (`94.92%`).
+2. **WS2 (CI pass-rate):** met — strict rolling threshold currently satisfied (`95.31%`).
 3. **WS3 (v1.0.1 hardening):** met — release and verification artifacts published.
 4. **WS4 (Evidence automation):** met — one-command refresh scripts wired to weekly workflow.
 5. **WS5 (Third-party mention):** met — canonical Dev.to article published and linked.
