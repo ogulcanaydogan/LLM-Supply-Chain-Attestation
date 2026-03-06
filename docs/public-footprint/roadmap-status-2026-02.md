@@ -4,7 +4,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 ## Snapshot
 
-- Generated: 2026-02-23 UTC
+- Generated: 2026-03-06 UTC
 - Scope: `llmsa` public footprint only
 - Source of truth:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
@@ -17,7 +17,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 | Workstream | Target | Current | Status |
 |---|---|---|---|
 | WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `1` open (`scorecard#4942`) | complete (minimum target met) |
-| WS2: CI pass-rate | rolling `>=95%` | rolling `97.65% (83/85)`; post-hardening `98.78% (81/82)` | complete |
+| WS2: CI pass-rate | rolling `>=95%` | rolling `95.00% (57/60)`; post-hardening `95.00% (57/60)` | complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
 | WS5: Third-party mention | canonical non-GitHub publication URL | canonical URL set to Dev.to article | complete |
@@ -32,8 +32,8 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 The rolling 30-day CI pass rate now exceeds the strict target:
 
-1. **Strict threshold met.** Rolling CI pass rate is `97.65%` (`83/85`), above the `>=95%` requirement.
-2. **Post-hardening trend remains strong.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `98.78%` (`81/82`).
+1. **Strict threshold met.** Rolling CI pass rate is `95.00%` (`57/60`), at the `>=95%` requirement.
+2. **Post-hardening threshold met.** Since `2026-02-19T16:08:22Z`, post-hardening pass rate is `95.00%` (`57/60`).
 3. **Decision:** WS2 is complete under strict criteria, without acceptance override.
 
 ## Closure Summary
@@ -41,7 +41,7 @@ The rolling 30-day CI pass rate now exceeds the strict target:
 All 5 Day-30 roadmap workstreams are complete:
 
 1. **WS1 (Upstream conversion):** met — `cosign#4710` merged.
-2. **WS2 (CI pass-rate):** met — strict rolling threshold satisfied (`97.65%`).
+2. **WS2 (CI pass-rate):** met — strict rolling threshold satisfied (`95.00%`).
 3. **WS3 (v1.0.1 hardening):** met — release and verification artifacts published.
 4. **WS4 (Evidence automation):** met — one-command refresh scripts wired to weekly workflow.
 5. **WS5 (Third-party mention):** met — canonical Dev.to article published and linked.

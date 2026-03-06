@@ -13,8 +13,8 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 | Third-party mention count | >=1 | 5 (canonical Dev.to + additional publications) | achieved | `docs/public-footprint/evidence-pack-2026-02-18.md` |
 | Anonymous pilot case study | >=1 | 1 | achieved | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Hardening release closure | v1.0.1 complete evidence | complete | achieved | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
-| CI pass-rate (rolling 30-day) | >=95% | 97.65% (83/85) | achieved | `.llmsa/public-footprint/20260223T213311Z/ci-health.json` |
-| CI pass-rate (post-hardening baseline) | >=95% | 98.78% (81/82) | achieved | `.llmsa/public-footprint/20260223T213311Z/ci-health.json` |
+| CI pass-rate (rolling 30-day) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T095052Z/ci-health.json` |
+| CI pass-rate (post-hardening baseline) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T095052Z/ci-health.json` |
 
 ## What Worked
 
@@ -28,7 +28,7 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 1. One upstream PR remains open (`scorecard#4942`) and not yet converted to merged evidence.
 2. OPA docs contribution line was closed twice (`#8343`, `#8346`) with maintainer guidance to keep this pattern in project docs.
-3. One upstream PR remains open (`scorecard#4942`), so external-validation depth can still be improved beyond the minimum merged target.
+3. External-validation depth is still limited while only one upstream line is merged.
 
 ## Next Cycle Priorities
 

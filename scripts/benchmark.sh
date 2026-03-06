@@ -229,7 +229,7 @@ PY
 go build -o "${BIN}" ./cmd/llmsa
 make -C examples/tiny-rag clean attest sign >/dev/null
 
-BASE_STATEMENT="$(ls .llmsa/attestations/statement_prompt_attestation_*.json | head -n1)"
+BASE_STATEMENT="$(ls -1t .llmsa/attestations/statement_prompt_attestation_*.json | head -n1)"
 measure_sign_and_verify 1 "${BASE_STATEMENT}"
 measure_sign_and_verify 10 "${BASE_STATEMENT}"
 measure_sign_and_verify 100 "${BASE_STATEMENT}"
