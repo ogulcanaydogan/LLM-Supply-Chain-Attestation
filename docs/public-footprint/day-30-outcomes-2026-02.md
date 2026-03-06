@@ -8,13 +8,13 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 | Target | Expected | Actual | Status | Evidence |
 |---|---:|---:|---|---|
-| Upstream PRs opened | >=2 | 6 | achieved | `docs/public-footprint/external-contribution-log.md` |
+| Upstream PRs opened | >=2 | 7 | achieved | `docs/public-footprint/external-contribution-log.md` |
 | Upstream PRs merged | >=1 | 1 | achieved | `docs/public-footprint/external-contribution-log.md` |
 | Third-party mention count | >=1 | 5 (canonical Dev.to + additional publications) | achieved | `docs/public-footprint/evidence-pack-2026-02-18.md` |
 | Anonymous pilot case study | >=1 | 1 | achieved | `docs/public-footprint/case-study-anonymous-pilot-2026-02.md` |
 | Hardening release closure | v1.0.1 complete evidence | complete | achieved | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22189290319 |
-| CI pass-rate (rolling 30-day) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T095457Z/ci-health.json` |
-| CI pass-rate (post-hardening baseline) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T095457Z/ci-health.json` |
+| CI pass-rate (rolling 30-day) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T105635Z/ci-health.json` |
+| CI pass-rate (post-hardening baseline) | >=95% | 95.00% (57/60) | achieved | `.llmsa/public-footprint/20260306T105635Z/ci-health.json` |
 
 ## What Worked
 
@@ -26,13 +26,13 @@ This outcome summary covers the 30-day public-footprint plan execution for `llms
 
 ## What Did Not Convert
 
-1. Three upstream PRs remain open (`scorecard#4942`, `scorecard#4960`, and backup lane `slsa-github-generator#4468`) and are pending maintainer review.
+1. Three upstream PRs remain open (`scorecard#4960`, `slsa-github-generator#4468`, and `cosign#4740`) and are pending maintainer review.
 2. OPA docs contribution line was closed twice (`#8343`, `#8346`) with maintainer guidance to keep this pattern in project docs.
 3. External-validation depth is still limited while only one upstream line is merged.
 
 ## Next Cycle Priorities
 
-1. Convert a second merge from remaining open PRs (`scorecard#4942`, `scorecard#4960`, `slsa-github-generator#4468`) if maintainers accept scope.
+1. Convert a second merge from remaining open PRs (`scorecard#4960`, `slsa-github-generator#4468`, `cosign#4740`) if maintainers accept scope.
 2. Maintain CI/workflow stability above strict threshold and rerun consistency checks on each evidence refresh.
 3. Refresh and freeze evidence pack + roadmap outputs after each upstream PR status change.
 

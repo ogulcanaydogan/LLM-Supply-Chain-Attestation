@@ -16,7 +16,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 | Workstream | Target | Current | Status |
 |---|---|---|---|
-| WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `3` open (`scorecard#4942`, `scorecard#4960`, `slsa-github-generator#4468`) | complete (minimum target met) |
+| WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `3` open (`scorecard#4960`, `slsa-github-generator#4468`, `cosign#4740`) | complete (minimum target met) |
 | WS2: CI pass-rate | rolling `>=95%` | rolling `95.00% (57/60)`; post-hardening `95.00% (57/60)` | complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
