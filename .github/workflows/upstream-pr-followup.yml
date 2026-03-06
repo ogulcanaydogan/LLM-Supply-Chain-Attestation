@@ -19,7 +19,7 @@ jobs:
       - name: Generate upstream follow-up snapshot
         env:
           GH_TOKEN: ${{ github.token }}
-          POST_FOLLOWUPS: "true"
+          POST_FOLLOWUPS: "false"
           FOLLOWUP_INTERVAL_HOURS: "12"
           FALLBACK_NOT_BEFORE_UTC: "2026-03-13T00:00:00Z"
           FOLLOWUP_AUTOPING_ALLOWLIST: "sigstore/cosign:4740,ossf/scorecard:4960"

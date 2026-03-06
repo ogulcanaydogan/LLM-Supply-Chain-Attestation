@@ -16,7 +16,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 | Workstream | Target | Current | Status |
 |---|---|---|---|
-| WS1: Upstream conversion | `>=1` merged external PR | `1` merged (`cosign#4710`), `3` open (`scorecard#4960`, `slsa-github-generator#4468`, `cosign#4740`) | complete (minimum target met) |
+| WS1: Upstream conversion | `>=1` merged external PR | `2` merged (`cosign#4710`, `cosign#4740`), `0` open (`scorecard#4960` and `slsa-github-generator#4468` closed as superseded) | complete |
 | WS2: CI pass-rate | rolling `>=95%` | rolling `95.31% (61/64)`; post-hardening `95.31% (61/64)` | complete |
 | WS3: `v1.0.1` hardening evidence | release + verification artifacts complete | complete with release and verification runs linked | complete |
 | WS4: Evidence automation | one-command refresh and source-traceable docs | complete (`public-footprint-snapshot`, `ci-health-snapshot`, `generate-evidence-pack`) | complete |
@@ -41,12 +41,11 @@ The rolling 30-day CI pass rate now exceeds the strict target:
 All Day-30 workstreams are complete:
 
 1. **WS1 (Upstream conversion):** met — `cosign#4710` merged.
+   - additional conversion achieved: `cosign#4740` merged on 2026-03-06.
 2. **WS2 (CI pass-rate):** met — strict rolling threshold currently satisfied (`95.31%`).
 3. **WS3 (v1.0.1 hardening):** met — release and verification artifacts published.
 4. **WS4 (Evidence automation):** met — one-command refresh scripts wired to weekly workflow.
 5. **WS5 (Third-party mention):** met — canonical Dev.to article published and linked.
-
-Primary lane for second external merge conversion: `https://github.com/sigstore/cosign/pull/4740` (secondary: `scorecard#4960`; passive backup: `slsa#4468`).
 
 ## Runtime/Infra Profile
 
