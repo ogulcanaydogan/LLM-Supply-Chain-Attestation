@@ -5,7 +5,7 @@
 - Name: `LLM-Supply-Chain-Attestation (llmsa)`
 - Repository: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation
 - Reporting window: 2026-02-18 to 2026-03-19 (UTC, rolling 30-day execution window)
-- Generated at (UTC): `2026-03-06T09:55:02Z`
+- Generated at (UTC): `2026-03-06T10:25:58Z`
 
 ## Evidence Summary
 
@@ -14,7 +14,7 @@
 | Release shipped with signed artifacts | Release | 2026-02-23 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/releases/tag/v1.0.2 |
 | Release workflow completed successfully | Workflow | 2026-02-23 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22322730128 |
 | Release verification completed successfully | Workflow | 2026-02-23 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22322813542 |
-| CI attestation gate enforced and passing | Workflow | 2026-03-06 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22758255706 |
+| CI attestation gate enforced and passing | Workflow | 2026-03-06 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22758380343 |
 | Public-footprint snapshot workflow executed | Workflow | 2026-03-02 | https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22560489055 |
 | Tamper test suite executed (20 cases) | Benchmark/Security | 2026-03-06 | repository artifact path: `.llmsa/tamper/results.json` |
 | Upstream contribution closed (unmerged) | External PR | 2026-02-19 | https://github.com/open-policy-agent/opa/pull/8343 |
@@ -53,8 +53,8 @@
 |---|---|---|---|---|
 | https://github.com/open-policy-agent/opa/pull/8343 | closed | false | n/a | 2026-02-19T16:27:58Z |
 | https://github.com/open-policy-agent/opa/pull/8346 | closed | false | n/a | 2026-02-19T16:32:37Z |
-| https://github.com/ossf/scorecard/pull/4942 | open | false | n/a | 2026-03-06T09:54:19Z |
-| https://github.com/ossf/scorecard/pull/4960 | open | false | n/a | 2026-03-06T09:54:17Z |
+| https://github.com/ossf/scorecard/pull/4942 | open | false | n/a | 2026-03-06T10:25:31Z |
+| https://github.com/ossf/scorecard/pull/4960 | open | false | n/a | 2026-03-06T10:25:20Z |
 | https://github.com/sigstore/cosign/pull/4710 | closed | true | 2026-02-19T21:49:44Z | 2026-02-19T21:59:28Z |
 | https://github.com/slsa-framework/slsa-github-generator/pull/4468 | open | false | n/a | 2026-03-06T09:24:29Z |
 
