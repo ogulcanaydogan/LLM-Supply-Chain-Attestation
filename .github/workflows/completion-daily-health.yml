@@ -20,6 +20,7 @@ jobs:
       - name: Run daily completion checks
         env:
           GH_TOKEN: ${{ github.token }}
+          BOOTSTRAP_FRESH_ARTIFACTS: "true"
         run: |
           chmod +x scripts/completion-daily-check.sh
           ./scripts/completion-daily-check.sh "${GITHUB_REPOSITORY}"
