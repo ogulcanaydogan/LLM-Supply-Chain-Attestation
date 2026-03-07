@@ -1,6 +1,6 @@
 GO ?= go
 
-.PHONY: init tidy build test demo attest sign verify gate report
+.PHONY: init tidy build test demo attest sign verify gate report completion-daily completion-weekly workflow-health
 
 init:
 	$(GO) run ./cmd/llmsa init
@@ -31,3 +31,12 @@ gate:
 
 report:
 	$(MAKE) -C examples/tiny-rag report
+
+completion-daily:
+	./scripts/completion-daily-check.sh
+
+completion-weekly:
+	./scripts/completion-weekly-refresh.sh
+
+workflow-health:
+	./scripts/workflow-health-check.sh

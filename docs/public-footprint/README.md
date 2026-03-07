@@ -31,6 +31,7 @@ The goal is to convert strong internal engineering quality into externally verif
 - `what-we-do-not-claim.md`: explicit non-claims and known limitations language.
 - `day0-metrics-2026-02-18.md`: initial baseline snapshot.
 - `roadmap-status-2026-02.md`: current roadmap-completion status and endgame gates.
+- `completion-maintenance.md`: baseline, daily guard, and weekly refresh runbook to keep strict completion state.
 - `external-contribution-log.md`: tracker for opened/merged external PRs.
 - `v1.0.1-hardening-closure.md`: hardening completion checklist and linked evidence.
 - `../project-completion-roadmap-2026-02.md`: full project completion roadmap with current closure process and operating cadence.
@@ -41,14 +42,15 @@ The goal is to convert strong internal engineering quality into externally verif
 
 ## Operating Rhythm
 
-1. Update metrics weekly via `scripts/public-footprint-snapshot.sh`.
-2. Update `external-contribution-log.md` on every external PR event.
-3. Keep all public claims linked to public URLs (release, workflow, PR, post, talk).
-4. Keep non-claims updated when scope changes.
-5. Publish canonical third-party mention via `.github/workflows/publish-third-party-mention.yml` once `DEVTO_API_KEY` secret is configured.
-6. Run `scripts/roadmap-completion-check.sh` to determine strict/practical roadmap completion and current blockers.
-7. Run `scripts/ci-passrate-forecast.sh` to estimate success-only runs needed for rolling `>=95%`.
-8. Run `scripts/check-footprint-consistency.sh` before freezing docs to block stale or contradictory footprint narratives.
-   - default scope is `full` (all narrative + metric docs).
-   - CI weekly uses `CONSISTENCY_SCOPE=core` for generated metric docs (`measurement-dashboard`, `evidence-pack`).
-9. Run `scripts/scorecard-fallback-readiness.sh` to confirm whether fallback conversion should be executed or cadence should continue.
+1. Run `scripts/completion-daily-check.sh` for daily workflow health + strict completion + consistency guard.
+2. Update metrics weekly via `scripts/public-footprint-snapshot.sh`.
+3. Update `external-contribution-log.md` on every external PR event.
+4. Keep all public claims linked to public URLs (release, workflow, PR, post, talk).
+5. Keep non-claims updated when scope changes.
+6. Publish canonical third-party mention via `.github/workflows/publish-third-party-mention.yml` once `DEVTO_API_KEY` secret is configured.
+7. Run `scripts/roadmap-completion-check.sh` to determine strict/practical roadmap completion and current blockers.
+8. Run `scripts/ci-passrate-forecast.sh` to estimate success-only runs needed for rolling `>=95%`.
+9. Run `scripts/check-footprint-consistency.sh` before freezing docs to block stale or contradictory footprint narratives.
+10. Use `CONSISTENCY_SCOPE=full` for full narrative+metric checks, and `CONSISTENCY_SCOPE=core` for generated metric docs (`measurement-dashboard`, `evidence-pack`).
+11. Run `scripts/scorecard-fallback-readiness.sh` to confirm whether fallback conversion should be executed or cadence should continue.
+12. Run `scripts/completion-weekly-refresh.sh` when you want a single-command weekly refresh of snapshot + ci-health + evidence + completion + consistency.
