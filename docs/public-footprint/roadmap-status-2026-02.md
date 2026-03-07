@@ -17,6 +17,17 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 - completion baseline: `.llmsa/public-footprint/20260307T125957Z/roadmap-completion.json`
 - consistency baseline: `.llmsa/public-footprint/20260307T130043Z/consistency-check.json`
 
+### Operational Closure Checkpoint (2026-03-07)
+
+- Manual daily guard validation passed: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22800142126
+- Manual weekly pipeline validation passed: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22769072712
+- Scheduled validation checkpoints (time-gated):
+  - `completion-daily-health` scheduled run expected on **2026-03-08 04:00 UTC**
+  - `public-footprint-weekly` scheduled run expected on **2026-03-09 03:00 UTC**
+- Post-closure backlog routing applied:
+  - open infra/quality issues moved to milestone `v1.1-infra-quality`
+  - priority and ownership assigned (`priority/p1|p2`, assignee `ogulcanaydogan`)
+
 ## Workstream Status
 
 | Workstream | Target | Current | Status |

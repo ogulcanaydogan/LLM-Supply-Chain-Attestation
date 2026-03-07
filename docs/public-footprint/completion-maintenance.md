@@ -56,3 +56,11 @@ After daily or weekly checks, the newest artifacts under `.llmsa/public-footprin
 
 - Daily automation workflow: `.github/workflows/completion-daily-health.yml`
 - Weekly refresh workflow: `.github/workflows/public-footprint-weekly.yml`
+
+## Time-Gated Scheduled Validation (Operational Closure)
+
+Use this checklist to close the loop after manual validation:
+
+1. Confirm `completion-daily-health` scheduled run after **2026-03-08 04:00 UTC** is `success`.
+2. Confirm `public-footprint-weekly` scheduled run after **2026-03-09 03:00 UTC** is `success`.
+3. Capture run URLs in `docs/public-footprint/roadmap-status-2026-02.md` under "Operational Closure Checkpoint".

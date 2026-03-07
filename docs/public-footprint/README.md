@@ -32,6 +32,7 @@ The goal is to convert strong internal engineering quality into externally verif
 - `day0-metrics-2026-02-18.md`: initial baseline snapshot.
 - `roadmap-status-2026-02.md`: current roadmap-completion status and endgame gates.
 - `completion-maintenance.md`: baseline, daily guard, and weekly refresh runbook to keep strict completion state.
+- `operational-closure-package-2026-03-07.md`: closure summary, remaining time-gated checks, and v1.1 backlog routing.
 - `external-contribution-log.md`: tracker for opened/merged external PRs.
 - `v1.0.1-hardening-closure.md`: hardening completion checklist and linked evidence.
 - `../project-completion-roadmap-2026-02.md`: full project completion roadmap with current closure process and operating cadence.
