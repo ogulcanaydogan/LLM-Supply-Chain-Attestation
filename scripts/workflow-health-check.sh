@@ -114,7 +114,7 @@ is_missing_allowed() {
 
 for wf in "${WORKFLOW_LIST[@]}"; do
   latest_run="$(jq -c --arg wf "${wf}" '
-    [.workflow_runs[] | select(.name == $wf)] | sort_by(.created_at) | last // {}
+    [.workflow_runs[] | select(.name == $wf and .status == "completed")] | sort_by(.created_at) | last // {}
   ' "${RUNS_JSON}")"
 
   run_id="$(echo "${latest_run}" | jq -r '.id // empty')"
