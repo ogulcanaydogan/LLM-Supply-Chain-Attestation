@@ -80,7 +80,7 @@ if [[ -z "${REPO}" || "${REPO}" == "null" ]]; then
 fi
 
 TS="$(date -u +"%Y%m%dT%H%M%SZ")"
-OUT_DIR=".llmsa/public-footprint/${TS}"
+OUT_DIR="${FOOTPRINT_OUT_DIR:-.llmsa/public-footprint/${TS}}"
 mkdir -p "${OUT_DIR}"
 
 EXTERNAL_LOG="docs/public-footprint/external-contribution-log.md"
