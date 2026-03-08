@@ -20,9 +20,10 @@ Traditional software supply-chain controls do not cover LLM-specific artifacts. 
 
 ## What Remains (Time-Gated)
 
-1. Scheduled daily guard check on **2026-03-08 04:00 UTC** must complete successfully.
+1. Scheduled daily guard check completed successfully:
+   - https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22813960165
 2. Scheduled weekly footprint check on **2026-03-09 03:00 UTC** must complete successfully.
-3. After both pass, add run URLs to `roadmap-status-2026-02.md` and mark operational closure fully ratified.
+3. After the weekly scheduled check passes, mark operational closure fully ratified in `roadmap-status-2026-02.md`.
 
 ## Backlog Moved Out of Closure Scope
 

@@ -4,7 +4,7 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 
 ## Snapshot
 
-- Generated: 2026-03-07 UTC
+- Generated: 2026-03-08 UTC
 - Scope: `llmsa` public footprint only
 - Source of truth:
   - `docs/public-footprint/evidence-pack-2026-02-18.md`
@@ -17,16 +17,21 @@ This page tracks execution status against the Day-30 public-footprint roadmap.
 - completion baseline: `.llmsa/public-footprint/20260307T125957Z/roadmap-completion.json`
 - consistency baseline: `.llmsa/public-footprint/20260307T130043Z/consistency-check.json`
 
-### Operational Closure Checkpoint (2026-03-07)
+### Operational Closure Checkpoint (2026-03-08)
 
 - Manual daily guard validation passed: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22800142126
 - Manual weekly pipeline validation passed: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22769072712
-- Scheduled validation checkpoints (time-gated):
-  - `completion-daily-health` scheduled run expected on **2026-03-08 04:00 UTC**
-  - `public-footprint-weekly` scheduled run expected on **2026-03-09 03:00 UTC**
+- Scheduled daily validation passed:
+  - `completion-daily-health` scheduled run success (2026-03-08 04:34 UTC):
+    https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22813960165
+- Remaining time-gated validation:
+  - `public-footprint-weekly` scheduled run expected on **2026-03-09 03:00 UTC** (must be `success`)
 - Post-closure backlog routing applied:
   - open infra/quality issues moved to milestone `v1.1-infra-quality`
   - priority and ownership assigned (`priority/p1|p2`, assignee `ogulcanaydogan`)
+- Repo hygiene checkpoint:
+  - open PR count: `0`
+  - working tree: clean (`main` synced with `origin/main`)
 
 ## Workstream Status
 
