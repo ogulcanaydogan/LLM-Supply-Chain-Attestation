@@ -18,12 +18,13 @@ Traditional software supply-chain controls do not cover LLM-specific artifacts. 
    - daily guard manual run: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22800142126
    - weekly pipeline manual run: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22769072712
 
-## What Remains (Time-Gated)
+## Operational Closure Ratification (2026-03-09)
 
 1. Scheduled daily guard check completed successfully:
    - https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22813960165
-2. Scheduled weekly footprint check on **2026-03-09 03:00 UTC** must complete successfully.
-3. After the weekly scheduled check passes, mark operational closure fully ratified in `roadmap-status-2026-02.md`.
+2. Scheduled weekly footprint check completed successfully:
+   - https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22837453690
+3. Closure status: operational closure is ratified and documented in `roadmap-status-2026-02.md`.
 
 ## Backlog Moved Out of Closure Scope
 

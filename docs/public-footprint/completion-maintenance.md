@@ -64,4 +64,7 @@ Use this checklist to close the loop after manual validation:
 1. Confirm `completion-daily-health` scheduled run after **2026-03-08 04:00 UTC** is `success`.
    - done: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22813960165
 2. Confirm `public-footprint-weekly` scheduled run after **2026-03-09 03:00 UTC** is `success`.
+   - done: https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/actions/runs/22837453690
 3. Capture run URLs in `docs/public-footprint/roadmap-status-2026-02.md` under "Operational Closure Checkpoint".
+
+Checklist status: completed. Operational closure ratified on **2026-03-09 UTC**.
