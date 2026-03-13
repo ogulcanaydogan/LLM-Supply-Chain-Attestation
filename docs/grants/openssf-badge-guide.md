@@ -1,6 +1,6 @@
 # OpenSSF Best Practices Badge Guide
 
-## Application for llmsa -- LLM Supply Chain Attestation
+## Application for llmsa: LLM Supply Chain Attestation
 
 | Field | Detail |
 |-------|--------|
@@ -8,7 +8,7 @@
 | **URL** | <https://www.bestpractices.dev/en> |
 | **Badge levels** | Passing, Silver, Gold |
 | **Target level** | Passing (initial), Silver (stretch) |
-| **Project** | llmsa -- LLM Supply Chain Attestation |
+| **Project** | llmsa: LLM Supply Chain Attestation |
 | **Repository** | <https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation> |
 | **License** | Apache-2.0 |
 
@@ -82,14 +82,14 @@ This checklist maps the OpenSSF Best Practices criteria to what the llmsa reposi
 | Category | Satisfied | Needs Work |
 |----------|-----------|------------|
 | Basics | 6/7 | License headers in source files (recommended, not required) |
-| Change Control | 4/4 | -- |
-| Reporting | 3/3 | -- |
-| Quality | 6/6 | -- |
+| Change Control | 4/4 | None |
+| Reporting | 3/3 | None |
+| Quality | 6/6 | None |
 | Security | 5/6 | Run govulncheck to confirm no known vulnerabilities |
 | Analysis | 1/3 | Add static analysis to CI; consider fuzzing |
 | **Total** | **25/29** | **4 items to address** |
 
-**Assessment:** The project already satisfies the vast majority of Passing-level criteria. The remaining items (license headers, govulncheck, static analysis in CI, fuzzing) are straightforward additions that can be completed in 1--2 days.
+**Assessment:** The project already satisfies the vast majority of Passing-level criteria. The remaining items (license headers, govulncheck, static analysis in CI, fuzzing) are straightforward additions that can be completed in 1 to 2 days.
 
 ---
 
@@ -113,7 +113,7 @@ This checklist maps the OpenSSF Best Practices criteria to what the llmsa reposi
 
 | Form Field | Value |
 |------------|-------|
-| **Project name** | llmsa -- LLM Supply Chain Attestation |
+| **Project name** | llmsa: LLM Supply Chain Attestation |
 | **Project description** | A cryptographic attestation framework that brings software supply-chain security to large language model lifecycles with typed LLM artefact provenance, policy enforcement, and deployment-time admission checks. |
 | **Project home page URL** | `https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation` |
 | **Repository URL** | `https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation` |
@@ -335,14 +335,14 @@ done
 
 Add fuzz tests for security-critical parsing paths:
 
-- `internal/verify/signature_verify_test.go` -- Fuzz DSSE envelope parsing
-- `internal/verify/schema_verify_test.go` -- Fuzz JSON Schema validation with malformed input
-- `pkg/schema/loader_test.go` -- Fuzz schema loading with corrupted files
-- `internal/sign/dsse_bundle_test.go` -- Fuzz bundle deserialization
+- `internal/verify/signature_verify_test.go`: fuzz DSSE envelope parsing
+- `internal/verify/schema_verify_test.go`: fuzz JSON Schema validation with malformed input
+- `pkg/schema/loader_test.go`: fuzz schema loading with corrupted files
+- `internal/sign/dsse_bundle_test.go`: fuzz bundle deserialization
 
 ### 3.5 Add OpenSSF Scorecard Workflow
 
-The repository already has `scorecard.yml` in `.github/workflows/`. Verify it is running and producing results visible at <https://securityscorecards.dev/>. The Scorecard score can be referenced in the badge application as additional evidence.
+The repository already has `scorecard.yml` in `.github/workflows/`. Verify it's running and producing results visible at <https://securityscorecards.dev/>. The Scorecard score can be referenced in the badge application as additional evidence.
 
 ---
 

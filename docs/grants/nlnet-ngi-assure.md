@@ -7,10 +7,10 @@
 | **Call** | NGI Assure (NLnet Foundation) |
 | **URL** | <https://nlnet.nl/propose/> |
 | **Requested amount** | EUR 40,000 |
-| **Eligible range** | EUR 5,000 -- 50,000 |
+| **Eligible range** | EUR 5,000 to 50,000 |
 | **Deadline** | 2026-04-01 |
 | **Applicant** | Ogulcan Aydogan |
-| **Project** | llmsa -- LLM Supply Chain Attestation |
+| **Project** | llmsa: LLM Supply Chain Attestation |
 | **Repository** | <https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation> |
 | **License** | Apache-2.0 |
 
@@ -18,11 +18,11 @@
 
 ## 1. Abstract
 
-Large language models are increasingly deployed in safety-critical applications, yet the artefacts that define their behaviour -- system prompts, training corpora, evaluation benchmarks, routing tables, and latency budgets -- flow through CI/CD pipelines with no integrity verification, no provenance tracking, and no policy enforcement. Existing supply-chain frameworks (SLSA, in-toto, SBOM) address traditional build artefacts but leave AI-specific components entirely unprotected.
+Large language models are increasingly deployed in safety-critical applications, yet the artefacts that define their behaviour (system prompts, training corpora, evaluation benchmarks, routing tables, and latency budgets) flow through CI/CD pipelines with no integrity verification, no provenance tracking, and no policy enforcement. Existing supply-chain frameworks (SLSA, in-toto, SBOM) address traditional build artefacts but leave AI-specific components entirely unprotected.
 
 **llmsa** is an open-source Go toolchain that closes this gap. It generates, signs, distributes, verifies, and enforces typed cryptographic attestations for five categories of LLM artefacts: prompt, corpus, eval, route, and SLO. Attestations are wrapped in DSSE envelopes, signed via Sigstore keyless OIDC binding (eliminating key management), published to OCI-compliant registries, and enforced at deployment time through a Kubernetes validating admission webhook. A dual policy engine (declarative YAML gates plus Open Policy Agent/Rego) evaluates provenance chain integrity before any workload reaches a cluster.
 
-The project is production-ready with 7 tagged releases, 9 CI workflows, a 20-case tamper-detection test suite, privacy-preserving attestation modes (hash-only, encrypted payload via age/X25519), and comprehensive documentation including a formal threat model. This grant would fund an independent security audit, SLSA Level 3 compliance hardening, OCI distribution resilience improvements, and expanded documentation to enable adoption by EU organisations preparing for the Cyber Resilience Act.
+The project is production-ready with 7 tagged releases, 9 CI workflows, a 20-case tamper-detection test suite, privacy-preserving attestation modes (hash-only, encrypted payload via age/X25519), and 15+ documentation pages including a formal threat model. This grant would fund an independent security audit, SLSA Level 3 compliance hardening, OCI distribution resilience improvements, and expanded documentation to enable adoption by EU organisations preparing for the Cyber Resilience Act.
 
 ---
 
@@ -30,7 +30,7 @@ The project is production-ready with 7 tagged releases, 9 CI workflows, a 20-cas
 
 ### 2.1 Background and Motivation
 
-The EU Cyber Resilience Act (CRA), expected to enter full enforcement in 2027, will require manufacturers and deployers of software products -- including AI systems -- to demonstrate supply-chain integrity throughout the product lifecycle. Current attestation frameworks were designed for container images, binaries, and packages. They have no understanding of the artefact types that determine LLM behaviour: the prompts that steer outputs, the data that shaped model weights, the benchmarks that validated quality, the routing logic that selects models, or the operational budgets that bound latency and cost.
+The EU Cyber Resilience Act (CRA), expected to enter full enforcement in 2027, will require manufacturers and deployers of software products, including AI systems, to demonstrate supply-chain integrity throughout the product lifecycle. Current attestation frameworks were designed for container images, binaries, and packages. They have no understanding of the artefact types that determine LLM behaviour: the prompts that steer outputs, the data that shaped model weights, the benchmarks that validated quality, the routing logic that selects models, or the operational budgets that bound latency and cost.
 
 This creates a systemic blind spot. A system prompt can be silently modified in production, altering model behaviour without any audit trail. Training data can be poisoned between preparation and deployment with no tamper detection. Evaluation results can be fabricated or replayed from stale runs to bypass quality gates. Routing logic can be changed to redirect traffic to cheaper, less capable models without accountability.
 
@@ -38,7 +38,7 @@ llmsa was designed from the ground up to address these threats with a domain-spe
 
 ### 2.2 What llmsa Does
 
-llmsa is a local-first CLI and CI toolchain written in Go that implements a complete attestation lifecycle for LLM artefacts:
+llmsa is a local-first CLI and CI toolchain written in Go that implements the full attestation lifecycle for LLM artefacts:
 
 **Typed Attestation Generation.** Five domain-specific collectors generate attestation statements for prompts (system prompts, templates, tool schemas, safety policies), corpora (training data, RAG documents, embeddings, vector indices), evaluations (test suites, benchmark results, scoring configs), routes (routing tables, fallback graphs, canary configs), and SLOs (latency targets, cost budgets, accuracy thresholds). Each collector understands the semantic structure of its artefact type, extracting the correct digests and metadata rather than treating everything as opaque blobs.
 
@@ -73,7 +73,7 @@ The project has reached feature completeness for its initial scope: all five att
 
 The grant would fund four workstreams that move llmsa from a feature-complete open-source project to a hardened, audited, and adoption-ready security tool suitable for EU CRA compliance:
 
-1. **Independent Security Audit of the Signing and Verification Pipeline** (EUR 28,000). Commission a third-party security firm to perform a comprehensive audit of the DSSE signing, Sigstore integration, Ed25519 PEM signing, signature verification, digest recomputation, chain verification, and OCI bundle integrity checks. This is the most critical workstream: the project's security guarantees rest entirely on the correctness of these codepaths. The audit would produce a public report with findings, severity ratings, and remediation status.
+1. **Independent Security Audit of the Signing and Verification Pipeline** (EUR 28,000). Commission a third-party security firm to audit all signing and verification codepaths: DSSE signing, Sigstore integration, Ed25519 PEM signing, signature verification, digest recomputation, chain verification, and OCI bundle integrity checks. This is the most critical workstream: the project's security guarantees rest entirely on the correctness of these codepaths. The audit would produce a public report with findings, severity ratings, and remediation status.
 
 2. **SLSA Level 3 Compliance** (EUR 5,000). Implement the remaining requirements for SLSA Build Level 3: non-forgeable provenance generated by the build platform, isolated build environment, and parameterless build definition. This includes integrating SLSA provenance generation into the GoReleaser pipeline, adding Rekor transparency log verification, and documenting the compliance posture.
 
@@ -97,7 +97,7 @@ The grant would fund four workstreams that move llmsa from a feature-complete op
 
 ## 4. Milestones and Timeline
 
-### Milestone 1: Security Audit Preparation (Weeks 1--2)
+### Milestone 1: Security Audit Preparation (Weeks 1 to 2)
 
 - Compile audit scope document covering all signing and verification codepaths
 - Identify and engage qualified security audit firm
@@ -106,7 +106,7 @@ The grant would fund four workstreams that move llmsa from a feature-complete op
 
 **Deliverable:** Audit scope document, signed engagement letter
 
-### Milestone 2: Security Audit Execution (Weeks 3--8)
+### Milestone 2: Security Audit Execution (Weeks 3 to 8)
 
 - External auditors perform code review of `internal/sign/`, `internal/verify/`, `internal/store/`, and `internal/webhook/`
 - Auditors execute the 20-case tamper detection suite and attempt additional bypass scenarios
@@ -115,7 +115,7 @@ The grant would fund four workstreams that move llmsa from a feature-complete op
 
 **Deliverable:** Draft audit report with findings categorised by severity
 
-### Milestone 3: Audit Remediation and SLSA Level 3 (Weeks 9--12)
+### Milestone 3: Audit Remediation and SLSA Level 3 (Weeks 9 to 12)
 
 - Remediate all Critical and High severity audit findings
 - Implement SLSA Build Level 3 requirements:
@@ -127,7 +127,7 @@ The grant would fund four workstreams that move llmsa from a feature-complete op
 
 **Deliverable:** Remediated codebase, SLSA provenance generation, Rekor integration, final audit report (public)
 
-### Milestone 4: OCI Hardening and Documentation (Weeks 13--16)
+### Milestone 4: OCI Hardening and Documentation (Weeks 13 to 16)
 
 - Implement OCI distribution hardening: retry with exponential backoff, registry failover, content-type validation, manifest signature verification
 - Add OCI 1.1 referrers API support for attestation discovery
@@ -137,7 +137,7 @@ The grant would fund four workstreams that move llmsa from a feature-complete op
 - Update quickstart guide with production deployment scenarios
 - Final integration testing across all changes
 
-**Deliverable:** Hardened OCI distribution, comprehensive documentation set, tagged release incorporating all grant-funded work
+**Deliverable:** Hardened OCI distribution, full documentation set (CRA mapping, cloud guides, contributor tutorial), tagged release incorporating all grant-funded work
 
 ---
 
@@ -145,7 +145,7 @@ The grant would fund four workstreams that move llmsa from a feature-complete op
 
 ### 5.1 Trustworthiness
 
-llmsa directly addresses the trustworthiness dimension of the Next Generation Internet by making AI system behaviour auditable and tamper-evident. Every artefact that influences model output -- from the system prompt to the latency budget -- is cryptographically attested, signed, and verified before deployment. This creates an unbroken chain of evidence from development through production, enabling organisations and individuals to trust that the AI system they interact with operates on verified components.
+llmsa directly addresses the trustworthiness dimension of the Next Generation Internet by making AI system behaviour auditable and tamper-evident. Every artefact that influences model output, from the system prompt to the latency budget, is cryptographically attested, signed, and verified before deployment. This creates an unbroken chain of evidence from development through production, enabling organisations and individuals to trust that the AI system they interact with operates on verified components.
 
 The independent security audit funded by this grant would provide external validation of these trust guarantees, producing a public report that any deployer can review before relying on llmsa for their own attestation infrastructure.
 
@@ -159,7 +159,7 @@ The project is Apache-2.0 licensed, developed entirely in the open on GitHub, an
 - **OPA** (Open Policy Agent) for policy evaluation
 - **SLSA** (Supply-chain Levels for Software Artifacts) for provenance
 
-There are no proprietary dependencies, no vendor lock-in, and no cloud-specific requirements. The tool runs entirely self-hosted with local PEM signing for air-gapped environments.
+There aren't any proprietary dependencies, vendor lock-in, or cloud-specific requirements. The tool runs entirely self-hosted with local PEM signing for air-gapped environments.
 
 ### 5.3 Resilience
 
@@ -215,7 +215,7 @@ None of these projects provide typed attestations for LLM-specific artefacts wit
 1. **Navigate** to <https://nlnet.nl/propose/>.
 2. **Select** the NGI Assure fund from the available calls.
 3. **Fill in** applicant details (name, email, country, organisation if applicable).
-4. **Project name:** llmsa -- LLM Supply Chain Attestation
+4. **Project name:** llmsa: LLM Supply Chain Attestation
 5. **Project URL:** `https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation`
 6. **Requested amount:** EUR 40,000
 7. **Abstract:** Paste Section 1 above (200 words).
@@ -231,7 +231,7 @@ None of these projects provide typed attestations for LLM-specific artefacts wit
 
 ## 9. Post-Submission
 
-- Monitor email for NLnet review questions (typically 2--4 weeks after submission)
+- Monitor email for NLnet review questions (typically 2 to 4 weeks after submission)
 - Be prepared to provide a short video demo of the attestation pipeline
 - NLnet may request a revised budget or milestone plan during review
 - If accepted, NLnet assigns a mentor and funds are disbursed per milestone completion

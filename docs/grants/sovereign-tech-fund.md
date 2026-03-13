@@ -4,13 +4,13 @@
 
 | Field | Detail |
 |-------|--------|
-| **Programme** | Sovereign Tech Fund -- Fund |
+| **Programme** | Sovereign Tech Fund: Fund |
 | **URL** | <https://www.sovereign.tech/programs/fund> |
 | **Requested amount** | EUR 50,000 |
 | **Eligible range** | EUR 50,000+ |
 | **Deadline** | 2026-03-25 |
 | **Applicant** | Ogulcan Aydogan |
-| **Project** | llmsa -- LLM Supply Chain Attestation |
+| **Project** | llmsa: LLM Supply Chain Attestation |
 | **Repository** | <https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation> |
 | **License** | Apache-2.0 |
 
@@ -20,7 +20,7 @@
 
 Governments and critical infrastructure operators across Europe are deploying large language models for citizen services, document processing, legal analysis, and decision support. These deployments depend on artefacts that have no supply-chain protection: the system prompts that steer model behaviour, the training data that shaped model capabilities, the evaluation benchmarks that validated model quality, the routing logic that selects which model handles which request, and the latency budgets that bound operational cost.
 
-If any of these artefacts is tampered with -- silently modified in transit, replayed from a stale version, or substituted without authorisation -- the behaviour of the AI system changes with no audit trail, no detection, and no accountability. For sovereign deployments where AI systems process citizen data and inform government decisions, this represents an unacceptable security gap.
+If any of these artefacts is tampered with (silently modified in transit, replayed from a stale version, or substituted without authorisation), the behaviour of the AI system changes with no audit trail, no detection, and no accountability. For sovereign deployments where AI systems process citizen data and inform government decisions, this represents an unacceptable security gap.
 
 **llmsa** (LLM Supply Chain Attestation) is an open-source Go toolchain that provides cryptographic attestation, signing, distribution, verification, and enforcement for all artefacts in the LLM delivery pipeline. It is fully self-hosted, requires no external cloud services for core operation, builds exclusively on open standards (DSSE, Sigstore, OCI, OPA, SLSA), and enforces zero-trust verification at every stage from development through Kubernetes admission.
 
@@ -32,11 +32,11 @@ This application requests EUR 50,000 to fund an independent security audit of th
 
 ### 2.1 Self-Hosted, Zero External Dependencies for Core Operation
 
-llmsa runs entirely on-premise. The core attestation lifecycle -- generation, signing with local PEM keys, local storage, verification, and policy enforcement -- requires no internet connectivity and no external service. This is a deliberate design choice for sovereign deployments:
+llmsa runs entirely on-premise. The core attestation lifecycle (generation, signing with local PEM keys, local storage, verification, and policy enforcement) requires no internet connectivity and no external service. This is a deliberate design choice for sovereign deployments:
 
-- **No cloud signing services required.** Ed25519 PEM signing works in fully air-gapped environments. Sigstore keyless signing is available for CI/CD pipelines with internet access but is not mandatory.
+- **No cloud signing services required.** Ed25519 PEM signing works in fully air-gapped environments. Sigstore keyless signing is available for CI/CD pipelines with internet access but isn't mandatory.
 - **No external policy servers.** The dual policy engine (YAML gates + OPA/Rego) evaluates policies locally. OPA policies are shipped as static files, not fetched from external endpoints.
-- **No vendor lock-in.** OCI distribution works with any compliant registry: self-hosted Harbor, GitLab Container Registry, or government-operated registries. There is no dependency on GHCR, ECR, or any commercial registry.
+- **No vendor lock-in.** OCI distribution works with any compliant registry: self-hosted Harbor, GitLab Container Registry, or government-operated registries. There's no dependency on GHCR, ECR, or any commercial registry.
 - **Single binary distribution.** The Go toolchain compiles to a single statically-linked binary with no runtime dependencies, simplifying deployment in restricted environments.
 
 ### 2.2 Zero-Trust Verification Model
@@ -45,9 +45,9 @@ llmsa implements a zero-trust verification model where every artefact is verifie
 
 - **At build time:** Attestation statements are generated with SHA-256 digests of all referenced artefacts.
 - **At signing time:** Statements are wrapped in DSSE envelopes and cryptographically signed.
-- **At distribution time:** Bundles are published to OCI registries with content-addressable digest pinning.
+- During distribution, bundles are published to OCI registries with content-addressable digest pinning.
 - **At verification time:** A four-stage pipeline validates signature integrity, schema conformance, digest recomputation (re-hashing source files to detect tampering), and provenance chain integrity (dependency graph validation).
-- **At deployment time:** A Kubernetes validating admission webhook enforces the full verification pipeline before any workload is admitted to the cluster. Default mode is fail-closed: if verification cannot be completed, the workload is rejected.
+- Before deployment reaches the cluster, a Kubernetes validating admission webhook runs the full verification pipeline. Default mode is fail-closed: if verification can't be completed, the workload is rejected.
 
 No stage trusts the output of any previous stage. Every stage independently verifies the evidence it receives.
 
@@ -201,7 +201,7 @@ An independent security audit by a qualified firm would:
 
 ## 6. Timeline
 
-### Phase 1: Audit Preparation and Scope (Weeks 1--2)
+### Phase 1: Audit Preparation and Scope (Weeks 1 to 2)
 
 | Task | Output |
 |------|--------|
@@ -210,7 +210,7 @@ An independent security audit by a qualified firm would:
 | Prepare isolated test environment with full attestation pipeline | Test environment with documented setup |
 | Document trust boundaries, threat model, and architecture for auditors | Auditor briefing package |
 
-### Phase 2: Security Audit Execution (Weeks 3--8)
+### Phase 2: Security Audit Execution (Weeks 3 to 8)
 
 | Task | Output |
 |------|--------|
@@ -219,7 +219,7 @@ An independent security audit by a qualified firm would:
 | Weekly sync calls for architecture clarification and finding triage | Meeting notes |
 | Begin remediating Critical/High findings as they arrive | Patches for early findings |
 
-### Phase 3: Remediation and SLSA Compliance (Weeks 9--12)
+### Phase 3: Remediation and SLSA Compliance (Weeks 9 to 12)
 
 | Task | Output |
 |------|--------|
@@ -229,7 +229,7 @@ An independent security audit by a qualified firm would:
 | Document SLSA compliance posture | Compliance matrix document |
 | Publish final audit report | Public audit report on GitHub |
 
-### Phase 4: OCI Hardening and Sovereign Documentation (Weeks 13--14)
+### Phase 4: OCI Hardening and Sovereign Documentation (Weeks 13 to 14)
 
 | Task | Output |
 |------|--------|
@@ -251,11 +251,11 @@ An independent security audit by a qualified firm would:
 - **SLSA Level 3 provenance for AI artefact attestations.** This is the first project to apply SLSA provenance standards to AI-specific artefacts, extending the SLSA framework beyond its traditional scope of container images and binaries.
 - **Sovereign deployment readiness.** Air-gapped deployment documentation and CRA compliance mapping enable European governments to adopt the tool without dependency on external cloud services.
 
-### 7.2 Ecosystem Impact
+### 7.2 Community Impact
 
-- **Standards contribution.** The LLM-specific attestation taxonomy (prompt, corpus, eval, route, SLO) is a novel contribution to the supply-chain security space. By publishing the predicate types as open specifications, llmsa enables other tools and platforms to generate and verify compatible attestations, creating an interoperable ecosystem.
+- **Standards contribution.** The LLM-specific attestation taxonomy (prompt, corpus, eval, route, SLO) is a novel contribution to the supply-chain security space. By publishing the predicate types as open specifications, llmsa enables other tools and platforms to generate and verify compatible attestations, creating an interoperable attestation network.
 - **Reference implementation.** The Kubernetes admission webhook provides a reference implementation for deployment-time attestation enforcement that can be adopted or adapted by other projects and platforms.
-- **Upstream contributions.** The project has identified and reported issues in Sigstore libraries related to certificate parse variability, contributing back to the broader signing ecosystem.
+- **Upstream contributions.** The project has identified and reported issues in Sigstore libraries related to certificate parse variability, contributing back to the broader signing community.
 
 ### 7.3 Long-Term Impact
 
@@ -268,10 +268,9 @@ An independent security audit by a qualified firm would:
 
 - **License:** Apache-2.0, permitting commercial and government use with no copyleft obligations
 - **Development:** All development is conducted in the open on GitHub
-- **Standards:** Built exclusively on open standards (DSSE, Sigstore, OCI, OPA, SLSA, age)
-- **No vendor lock-in:** No proprietary dependencies, no cloud-specific requirements
+- Built exclusively on open standards (DSSE, Sigstore, OCI, OPA, SLSA, age) with no proprietary dependencies or cloud-specific requirements
 - **Governance:** Published GOVERNANCE.md with clear decision-making process and path to maintainership
-- **Security:** Published SECURITY.md with vulnerability reporting policy, scope definitions, and response timelines
+- SECURITY.md defines vulnerability reporting policy, scope definitions, and response timelines
 - **Contributions:** Fork-and-pull-request model documented in CONTRIBUTING.md
 
 ---
@@ -305,7 +304,7 @@ An independent security audit by a qualified firm would:
 1. **Navigate** to <https://www.sovereign.tech/programs/fund>.
 2. **Review** the current call guidelines and eligibility criteria.
 3. **Prepare** an application using the STF submission form or email template.
-4. **Project name:** llmsa -- LLM Supply Chain Attestation
+4. **Project name:** llmsa: LLM Supply Chain Attestation
 5. **Project URL:** `https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation`
 6. **Requested amount:** EUR 50,000
 7. **Executive Summary:** Paste Section 1 above.
@@ -324,7 +323,7 @@ An independent security audit by a qualified firm would:
 
 ## 11. Post-Submission
 
-- The Sovereign Tech Fund review process typically takes 4--8 weeks
+- The Sovereign Tech Fund review process typically takes 4 to 8 weeks
 - Be prepared for a technical interview or demo session with the STF evaluation team
 - STF may request a revised scope, budget, or timeline during evaluation
 - If accepted, funding is disbursed based on milestone completion with regular progress reporting
