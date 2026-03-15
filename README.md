@@ -9,6 +9,7 @@
 ![K8s Webhook](https://img.shields.io/badge/K8s-Admission%20Webhook-326CE5?logo=kubernetes)
 ![Tamper Tests](https://img.shields.io/badge/Tamper%20Tests-20%20Cases-red)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12168/badge)](https://www.bestpractices.dev/projects/12168)
 
 ---
 
