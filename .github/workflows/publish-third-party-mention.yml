@@ -28,7 +28,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Validate Dev.to secret
         env:
@@ -58,7 +58,7 @@ jobs:
           echo "published_url=${url}" >> "${GITHUB_OUTPUT}"
 
       - name: Upload publish output
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: third-party-mention-publish
           path: publish-output.txt
