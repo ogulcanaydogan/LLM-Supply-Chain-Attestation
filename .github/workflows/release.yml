@@ -14,8 +14,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: '1.25'
 
@@ -45,8 +45,8 @@ jobs:
             goarch: amd64
             ext: ".exe"
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: '1.25'
 
@@ -60,7 +60,7 @@ jobs:
           go build -trimpath -ldflags "-s -w" -o "dist/${BIN}" ./cmd/llmsa
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: llmsa-${{ matrix.goos }}-${{ matrix.goarch }}
           path: dist/*
@@ -69,15 +69,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
         with:
           go-version: '1.25'
       - name: Setup cosign
         uses: sigstore/cosign-installer@v3
 
       - name: Download binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: llmsa-*
           merge-multiple: true
@@ -140,7 +140,7 @@ jobs:
           done
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
