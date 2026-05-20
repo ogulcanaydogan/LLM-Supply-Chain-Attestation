@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- CI, release, nightly-benchmark, and public-footprint workflows now pin `go-version: '1.26'` (was `'1.25'`); `go.mod` already declares `go 1.26.0`, and `GOTOOLCHAIN=local` was rejecting the older toolchain (`go: go.mod requires go >= 1.26.0`). Dockerfile builder image bumped from `golang:1.25-alpine` to `golang:1.26-alpine` for the same reason.
+
 ## [1.0.1] - 2026-02-19
 
 ### Added
