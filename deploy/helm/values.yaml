@@ -12,6 +12,7 @@ failOpen: false
 webhook:
   port: 8443
   failurePolicy: Fail
+  timeoutSeconds: 10
   namespaceSelector:
     matchLabels:
       llmsa-attestation: enabled

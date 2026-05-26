@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Helm chart (`deploy/helm`) updated for Kubernetes 1.32 compatibility: `kubeVersion: >=1.24.0-0` added to `Chart.yaml`; `admissionReviewVersions` in `webhook.yaml` narrowed from `[v1, v1beta1]` to `[v1]` (v1beta1 is deprecated in K8s 1.16+ and unsupported in 1.32+); `timeoutSeconds` promoted from a hardcoded value to `values.yaml` (`webhook.timeoutSeconds: 10`) so operators can tune it per environment without forking the template. Chart version bumped to `1.0.1`.
 - CI, release, nightly-benchmark, and public-footprint workflows now pin `go-version: '1.26'` (was `'1.25'`); `go.mod` already declares `go 1.26.0`, and `GOTOOLCHAIN=local` was rejecting the older toolchain (`go: go.mod requires go >= 1.26.0`). Dockerfile builder image bumped from `golang:1.25-alpine` to `golang:1.26-alpine` for the same reason.
 
 ## [1.0.1] - 2026-02-19
