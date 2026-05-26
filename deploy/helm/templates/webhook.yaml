@@ -8,7 +8,6 @@ webhooks:
   - name: attestation.llmsa.io
     admissionReviewVersions:
       - v1
-      - v1beta1
     clientConfig:
       service:
         name: {{ include "llmsa-webhook.fullname" . }}
@@ -37,4 +36,4 @@ webhooks:
       {{- toYaml .Values.webhook.namespaceSelector | nindent 6 }}
     failurePolicy: {{ .Values.webhook.failurePolicy }}
     sideEffects: None
-    timeoutSeconds: 10
+    timeoutSeconds: {{ .Values.webhook.timeoutSeconds }}

@@ -11,7 +11,7 @@ CLI and admission webhook that produce signed DSSE attestations for prompts, cor
 - [ ] in-toto v2 statement support alongside DSSE (backwards-compatible, negotiated by flag)
 - [ ] GitHub Action `ogulcanaydogan/llmsa-attest@v1` for one-line CI attestation
 - [ ] E2E tamper-detection test matrix: corrupt payload, clock skew, revoked key, replay
-- [ ] Helm chart updates for Kubernetes 1.32
+- [x] Helm chart updates for Kubernetes 1.32 (`kubeVersion: >=1.24.0-0`, `admissionReviewVersions` narrowed to `[v1]`, `timeoutSeconds` promoted to `values.yaml`)
 
 **Target branch**: `feature/v1.1.0`
 
