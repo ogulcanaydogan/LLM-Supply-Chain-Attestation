@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-05-30
+
 ### Changed
 
 - Helm chart (`deploy/helm`) updated for Kubernetes 1.32 compatibility: `kubeVersion: >=1.24.0-0` added to `Chart.yaml`; `admissionReviewVersions` in `webhook.yaml` narrowed from `[v1, v1beta1]` to `[v1]` (v1beta1 is deprecated in K8s 1.16+ and unsupported in 1.32+); `timeoutSeconds` promoted from a hardcoded value to `values.yaml` (`webhook.timeoutSeconds: 10`) so operators can tune it per environment without forking the template. Chart version bumped to `1.0.1`.
