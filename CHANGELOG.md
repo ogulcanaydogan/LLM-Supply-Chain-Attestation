@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- E2E tamper-detection test matrix (`test/e2e/pipeline_test.go`): four new scenarios covering statement-hash desync, payload base64 corruption, schema violation via manually-signed invalid predicate, and signatures-cleared; exercises `ExitSignatureFail` (11) via three distinct code paths and `ExitSchemaFail` (14) which had zero test coverage previously.
+
 ## [1.0.3] - 2026-05-30
 
 ### Changed

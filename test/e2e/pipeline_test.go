@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/attest"
+	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/hash"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/sign"
 	"github.com/ogulcanaydogan/llm-supply-chain-attestation/internal/verify"
 )
@@ -146,6 +147,140 @@ func TestFullPipeline_SignatureCorruption(t *testing.T) {
 	}
 	if report.ExitCode != 11 {
 		t.Errorf("exit code = %d, want 11 (signature fail)", report.ExitCode)
+	}
+}
+
+func TestTamper_StatementHashDesync(t *testing.T) {
+	outDir := t.TempDir()
+	keyPath := filepath.Join(outDir, "key.pem")
+	sign.GeneratePEMPrivateKey(keyPath)
+
+	bundlePath := createAndSignAttestation(t, "prompt_attestation", configPath(t, "prompt"), outDir, keyPath)
+
+	bundle, err := sign.ReadBundle(bundlePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle.Metadata.StatementHash = "sha256:" + strings.Repeat("a", 64)
+	corrupted, _ := json.MarshalIndent(bundle, "", "  ")
+	os.WriteFile(bundlePath, corrupted, 0o644)
+
+	report := verify.Run(verify.Options{
+		SourcePath: outDir,
+		SchemaDir:  schemaDir(t),
+	})
+	if report.Passed {
+		t.Error("expected verify to fail after statement hash desync")
+	}
+	if report.ExitCode != verify.ExitSignatureFail {
+		t.Errorf("exit code = %d, want %d (ExitSignatureFail)", report.ExitCode, verify.ExitSignatureFail)
+	}
+}
+
+func TestTamper_PayloadBase64Corruption(t *testing.T) {
+	outDir := t.TempDir()
+	keyPath := filepath.Join(outDir, "key.pem")
+	sign.GeneratePEMPrivateKey(keyPath)
+
+	bundlePath := createAndSignAttestation(t, "prompt_attestation", configPath(t, "prompt"), outDir, keyPath)
+
+	bundle, err := sign.ReadBundle(bundlePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle.Envelope.Payload = "!!!not-valid-base64==="
+	corrupted, _ := json.MarshalIndent(bundle, "", "  ")
+	os.WriteFile(bundlePath, corrupted, 0o644)
+
+	report := verify.Run(verify.Options{
+		SourcePath: outDir,
+		SchemaDir:  schemaDir(t),
+	})
+	if report.Passed {
+		t.Error("expected verify to fail after payload base64 corruption")
+	}
+	if report.ExitCode != verify.ExitSignatureFail {
+		t.Errorf("exit code = %d, want %d (ExitSignatureFail)", report.ExitCode, verify.ExitSignatureFail)
+	}
+}
+
+func TestTamper_SchemaViolation(t *testing.T) {
+	outDir := t.TempDir()
+	keyPath := filepath.Join(outDir, "key.pem")
+	sign.GeneratePEMPrivateKey(keyPath)
+
+	// Statement that satisfies the base statement schema but fails the
+	// predicate-specific schema: prompt_attestation requires prompt_bundle_digest
+	// (and others) which are all absent from this empty predicate.
+	stmt := map[string]any{
+		"schema_version":   "1.0.0",
+		"statement_id":     "test-schema-fail",
+		"attestation_type": "prompt_attestation",
+		"predicate_type":   "https://llmsa.dev/attestation/prompt/v1",
+		"generated_at":     "2026-06-02T00:00:00Z",
+		"generator":        map[string]any{"name": "test", "version": "0.0.0", "git_sha": "abc"},
+		"subject":          []any{},
+		"predicate":        map[string]any{},
+		"privacy":          map[string]any{"mode": "hash_only"},
+	}
+
+	canonical, err := hash.CanonicalJSON(stmt)
+	if err != nil {
+		t.Fatal(err)
+	}
+	signer, err := sign.NewPEMSigner(keyPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	material, err := signer.Sign(canonical)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle, err := sign.CreateBundle(stmt, material)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundlePath := filepath.Join(outDir, "prompt_attestation.bundle.json")
+	if err := sign.WriteBundle(bundlePath, bundle); err != nil {
+		t.Fatal(err)
+	}
+
+	report := verify.Run(verify.Options{
+		SourcePath: outDir,
+		SchemaDir:  schemaDir(t),
+	})
+	if report.Passed {
+		t.Error("expected verify to fail on schema violation")
+	}
+	if report.ExitCode != verify.ExitSchemaFail {
+		t.Errorf("exit code = %d, want %d (ExitSchemaFail)", report.ExitCode, verify.ExitSchemaFail)
+	}
+}
+
+func TestTamper_SignaturesCleared(t *testing.T) {
+	outDir := t.TempDir()
+	keyPath := filepath.Join(outDir, "key.pem")
+	sign.GeneratePEMPrivateKey(keyPath)
+
+	bundlePath := createAndSignAttestation(t, "prompt_attestation", configPath(t, "prompt"), outDir, keyPath)
+
+	bundle, err := sign.ReadBundle(bundlePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	bundle.Envelope.Signatures = nil
+	corrupted, _ := json.MarshalIndent(bundle, "", "  ")
+	os.WriteFile(bundlePath, corrupted, 0o644)
+
+	report := verify.Run(verify.Options{
+		SourcePath: outDir,
+		SchemaDir:  schemaDir(t),
+	})
+	if report.Passed {
+		t.Error("expected verify to fail after signatures cleared")
+	}
+	if report.ExitCode != verify.ExitSignatureFail {
+		t.Errorf("exit code = %d, want %d (ExitSignatureFail)", report.ExitCode, verify.ExitSignatureFail)
 	}
 }
 
