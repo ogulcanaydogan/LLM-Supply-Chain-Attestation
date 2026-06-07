@@ -123,7 +123,7 @@ jobs:
       - name: Generate checksums
         run: |
           rm -f dist/checksums.txt
-          (cd dist && find . -maxdepth 1 -type f ! -name '*.sig' ! -name '*.pem' -print0 | sort -z | xargs -0 sha256sum | sed 's|^\./||' > checksums.txt)
+          (cd dist && find . -maxdepth 1 -type f ! -name '*.sig' ! -name '*.pem' ! -name 'checksums.txt' -print0 | sort -z | xargs -0 sha256sum | sed 's|^\./||' > checksums.txt)
 
       - name: Install syft
         uses: anchore/sbom-action/download-syft@v0
