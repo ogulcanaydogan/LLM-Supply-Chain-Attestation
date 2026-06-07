@@ -83,7 +83,7 @@ jobs:
             exit 1
           fi
           # checksums.txt cannot list its own checksum, so verify every entry except itself.
-          grep -vE '[[:space:]]checksums\.txt$' checksums.txt | sha256sum -c -
+          grep -vE '[[:space:]./]checksums\.txt$' checksums.txt | sha256sum -c -
 
       - name: Verify cosign signatures
         run: |
