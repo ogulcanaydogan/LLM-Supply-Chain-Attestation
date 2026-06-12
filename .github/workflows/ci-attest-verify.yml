@@ -37,6 +37,32 @@ jobs:
       - name: Test
         run: go test ./...
 
+      - name: Coverage gate
+        run: |
+          fail=0
+          check() {
+            local pkg=$1 floor=$2
+            local pct
+            pct=$(go test -cover "./${pkg}/..." 2>&1 | grep -oE 'coverage: [0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+' | head -1)
+            if [ -z "$pct" ]; then
+              echo "SKIP ${pkg}: no coverage data"
+              return
+            fi
+            if awk -v p="${pct}" -v f="${floor}" 'BEGIN{exit !(p+0 < f+0)}'; then
+              echo "FAIL ${pkg}: ${pct}% < ${floor}% floor"
+              fail=1
+            else
+              echo "OK   ${pkg}: ${pct}% (floor ${floor}%)"
+            fi
+          }
+          check internal/hash     80
+          check internal/sign     75
+          check internal/verify   85
+          check internal/webhook  78
+          check internal/store    82
+          check pkg/schema        95
+          exit ${fail}
+
       - name: E2E Tests
         run: go test -tags=e2e -v -timeout 120s ./test/e2e/
 
