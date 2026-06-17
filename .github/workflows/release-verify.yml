@@ -50,6 +50,40 @@ jobs:
       - name: Setup cosign
         uses: sigstore/cosign-installer@v3
 
+      - name: Validate GitHub API access (preflight)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Fail fast with an actionable message if the workflow token cannot
+          # reach the GitHub API or the resolved release, before the retrying
+          # asset download below spends three attempts on an auth problem.
+          tag="${{ steps.resolve.outputs.tag }}"
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo "::error::release-verify preflight: GH_TOKEN is empty"
+            echo "Likely cause: job permissions missing 'contents: read' or GH_TOKEN not wired to \${{ github.token }}."
+            echo "Remediation: restore 'permissions: contents: read' on the job and re-run the workflow."
+            exit 1
+          fi
+          if ! gh auth status >/dev/null 2>&1; then
+            echo "::error::release-verify preflight: gh CLI is not authenticated"
+            echo "Likely cause: GITHUB_TOKEN expired, revoked, or lacks 'contents: read' scope."
+            echo "Remediation: check 'gh auth status' locally with the same token, confirm workflow permissions, then re-run."
+            exit 1
+          fi
+          if ! gh api "/repos/${GITHUB_REPOSITORY}" --jq '.full_name' >/dev/null 2>&1; then
+            echo "::error::release-verify preflight: GitHub API request failed for ${GITHUB_REPOSITORY}"
+            echo "Likely cause: token lacks repo read access, transient API outage, or secondary rate limiting."
+            echo "Remediation: verify 'contents: read' permission and re-run; if rate limited, wait and re-run."
+            exit 1
+          fi
+          if ! gh release view "${tag}" -R "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "::error::release-verify preflight: release '${tag}' is not readable"
+            echo "Likely cause: tag does not exist, the release is not published yet, or insufficient read scope."
+            echo "Remediation: confirm with 'gh release list -R ${GITHUB_REPOSITORY}' and re-run with a valid published tag."
+            exit 1
+          fi
+          echo "preflight OK: authenticated and release '${tag}' is reachable"
+
       - name: Download release assets
         env:
           GH_TOKEN: ${{ github.token }}
