@@ -10,6 +10,7 @@
 ![Tamper Tests](https://img.shields.io/badge/Tamper%20Tests-20%20Cases-red)
 ![License](https://img.shields.io/badge/License-Apache%202.0-blue)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/12168/badge)](https://www.bestpractices.dev/projects/12168)
+[![Go Reference](https://pkg.go.dev/badge/github.com/ogulcanaydogan/llm-supply-chain-attestation.svg)](https://pkg.go.dev/github.com/ogulcanaydogan/llm-supply-chain-attestation)
 
 ---
 
@@ -292,6 +293,17 @@ flowchart LR
 **Signature/Bundle Tampering (T11–T14)**: Signature corruption, public key substitution, statement hash manipulation, and signature removal — all caught by DSSE verification (exit 11).
 
 **Schema and Chain Integrity (T15–T20)**: Missing required predicate fields, invalid timestamps, malformed digests, incomplete dependency chains, and dangling references — all rejected by schema and chain validation (exit 14).
+
+## Install
+
+Install the `llmsa` CLI directly with the Go toolchain (Go 1.25+):
+
+```bash
+go install github.com/ogulcanaydogan/llm-supply-chain-attestation/cmd/llmsa@latest
+```
+
+This places the `llmsa` binary in `$(go env GOPATH)/bin`. Prebuilt binaries and
+checksums are also attached to each [GitHub Release](https://github.com/ogulcanaydogan/LLM-Supply-Chain-Attestation/releases).
 
 ## Quick Start
 
