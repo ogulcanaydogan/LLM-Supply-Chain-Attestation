@@ -47,6 +47,29 @@ func TestMatchesNoMatch(t *testing.T) {
 	}
 }
 
+// A trailing "*" pattern falls back to a prefix match that DOES cross "/"
+// (filepath.Match's "*" does not). So "data*" matches "data/nested/file.txt".
+// Note: policy/yaml match() has no such fallback, so the same pattern behaves
+// differently in policy triggers vs. attestation-type inference.
+func TestMatchesTrailingWildcardCrossesDirectory(t *testing.T) {
+	if !matches("data/nested/file.txt", "data*") {
+		t.Error("expected data/nested/file.txt to match data* via prefix fallback")
+	}
+}
+
+func TestMatchesTrailingWildcardPrefixMismatch(t *testing.T) {
+	if matches("metrics/app.txt", "logs*") {
+		t.Error("expected metrics/app.txt NOT to match logs* (prefix differs)")
+	}
+}
+
+func TestMatchesLiteralNonMatch(t *testing.T) {
+	// No "/**", no trailing "*", and filepath.Match fails -> final false branch.
+	if matches("a/b.txt", "x/y.txt") {
+		t.Error("expected a/b.txt NOT to match literal pattern x/y.txt")
+	}
+}
+
 // --- inferAttestationTypes() ---
 
 func TestInferAttestationTypesSingleMatch(t *testing.T) {
