@@ -333,5 +333,68 @@ func TestDigestTreeNonexistentRoot(t *testing.T) {
 	}
 }
 
+// --- writeCanonical: array element separator write error ---
+
+func TestWriteCanonicalArrayCommaWriteError(t *testing.T) {
+	// "[" (1) + "\"a\"" (3) = 4 bytes, then fail on the "," before the 2nd element.
+	w := &failWriter{limit: 4}
+	err := writeCanonical(w, []any{"a", "b"})
+	if err == nil {
+		t.Fatal("expected write error on array element separator")
+	}
+}
+
+// --- writeCanonical: map key / value / separator write errors ---
+
+func TestWriteCanonicalMapKeyWriteError(t *testing.T) {
+	// "{" (1) written, then fail while writing the key bytes.
+	w := &failWriter{limit: 1}
+	err := writeCanonical(w, map[string]any{"k": "v"})
+	if err == nil {
+		t.Fatal("expected write error on map key")
+	}
+}
+
+func TestWriteCanonicalMapValueWriteError(t *testing.T) {
+	// "{" (1) + "\"k\"" (3) + ":" (1) = 5 bytes, then fail on the value.
+	w := &failWriter{limit: 5}
+	err := writeCanonical(w, map[string]any{"k": "v"})
+	if err == nil {
+		t.Fatal("expected write error on map value")
+	}
+}
+
+func TestWriteCanonicalMapCommaWriteError(t *testing.T) {
+	// "{" + "\"a\"" + ":" + "\"1\"" = 8 bytes, then fail on the "," before the 2nd entry.
+	w := &failWriter{limit: 8}
+	err := writeCanonical(w, map[string]any{"a": "1", "b": "2"})
+	if err == nil {
+		t.Fatal("expected write error on map entry separator")
+	}
+}
+
+// --- writeCanonical: default branch reached directly (non-normalized types) ---
+
+func TestWriteCanonicalDefaultBranchInt(t *testing.T) {
+	// Calling writeCanonical directly with an int hits the default case, which
+	// marshals and re-normalizes the value through json.Number.
+	var buf bytes.Buffer
+	if err := writeCanonical(&buf, 42); err != nil {
+		t.Fatal(err)
+	}
+	if buf.String() != "42" {
+		t.Fatalf("expected 42, got %q", buf.String())
+	}
+}
+
+func TestWriteCanonicalDefaultBranchMarshalError(t *testing.T) {
+	// A channel cannot be marshaled; the default case must surface the error.
+	var buf bytes.Buffer
+	err := writeCanonical(&buf, make(chan int))
+	if err == nil {
+		t.Fatal("expected marshal error in default branch")
+	}
+}
+
 // We cannot import from io in the scope, ensure io is used properly
 var _ io.Writer = (*failWriter)(nil)
